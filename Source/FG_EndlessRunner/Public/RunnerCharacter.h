@@ -3,6 +3,7 @@
 #include "CoreMinimal.h"
 #include "CharacterCamera.h"
 #include "InputAction.h"
+#include "LevelManager.h"
 #include "FG_EndlessRunner/FG_EndlessRunnerGameModeBase.h"
 #include "GameFramework/Character.h"
 #include "RunnerCharacter.generated.h"
@@ -31,15 +32,20 @@ public:
 	ARunnerCharacter();
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Runner Settings")
-	float BaseMoveSpeed = 40.f;
-
-	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Runner Settings")
 	float MoveLaneTime = .25f;
 
-	void SetMoveSpeedFromMultiplier(float Multiplier);
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Runner Settings")
+	float InvincibleTime = .5f;
+
+	void SetMoveSpeed(float Speed);
 
 	UFUNCTION(BlueprintCallable, Category=Character)
 	bool GetIsJumping() const {return BIsJumping;}
+
+	UFUNCTION(BlueprintCallable, Category=Character)
+	float GetMoveSpeed() const {return CurrentMoveSpeed;}
+
+	bool Damage(int Amount);
 
 protected:
 	virtual void BeginPlay() override;
@@ -55,7 +61,12 @@ protected:
 
 	void MoveLane(float DeltaTime);
 
-	TObjectPtr<AFG_EndlessRunnerGameModeBase> GameMode;
+	TObjectPtr<ALevelManager> LevelManager;
+
+	UPROPERTY(Transient)
+	float InvincibleTimer;
+	UPROPERTY(Transient, VisibleAnywhere, Category="Runner Debug")
+	int HitPoints;
 
 	UPROPERTY(Transient, VisibleAnywhere, Category="Runner Debug")
 	bool BMovingLane;
@@ -71,6 +82,8 @@ protected:
 	float StartLaneY;
 	UPROPERTY(Transient)
 	float TargetLaneY;
+	UPROPERTY(Transient)
+	float CurrentMoveSpeed;
 
 public:	
 	virtual void Tick(float DeltaTime) override;

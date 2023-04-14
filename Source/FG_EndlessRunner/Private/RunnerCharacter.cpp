@@ -6,6 +6,7 @@
 #include "EnhancedInputComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 // Sets default values
 ARunnerCharacter::ARunnerCharacter()
@@ -26,20 +27,23 @@ void ARunnerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
 
-	GameMode = Cast<AFG_EndlessRunnerGameModeBase>(GetWorld()->GetAuthGameMode());
+	LevelManager = ALevelManager::GetLevelManager(GetWorld());
 
-	if(GameMode != nullptr)
+	if(LevelManager != nullptr)
 	{
-		CurrentLane = FMath::CeilToInt((GameMode->NumOfLanes-1)/2.f);
+		CurrentLane = FMath::CeilToInt((LevelManager->NumOfLanes-1)/2.f);
 
 		FVector StartPos = GetActorLocation();
 
-		StartPos.Y = GameMode->GetLanePos(CurrentLane);
+		StartPos.Y = LevelManager->GetLanePos(CurrentLane);
 		
 		SetActorLocation(StartPos);
 	}
 
 	BMovingLane = false;
+	TargetLane = CurrentLane;
+	HitPoints = 3;
+	InvincibleTimer = 0;
 
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
@@ -56,8 +60,8 @@ void ARunnerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCom
 
 	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
 	{		
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Triggered, this, &ARunnerCharacter::Move);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Triggered, this, &ARunnerCharacter::Jump);
+		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Started, this, &ARunnerCharacter::Move);
+		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ARunnerCharacter::Jump);
 
 		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ARunnerCharacter::Look);
 	}
@@ -67,19 +71,14 @@ void ARunnerCharacter::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 
-	if(Controller != nullptr)
-	{
-		// find out which way is forward
-		const FRotator Rotation = GetActorRotation();
-		const FRotator YawRotation(0, Rotation.Yaw, 0);
-
-		// get forward vector
-		const FVector ForwardDirection = FRotationMatrix(YawRotation).GetUnitAxis(EAxis::X);
-
-		GetCharacterMovement()->AddInputVector(ForwardDirection);
-	}
-
 	if(BMovingLane) MoveLane(DeltaTime);
+
+	if(InvincibleTimer != 0)
+	{
+		InvincibleTimer -= DeltaTime;
+
+		if(InvincibleTimer < 0) InvincibleTimer = 0;
+	}
 }
 
 void ARunnerCharacter::MoveLane(float DeltaTime)
@@ -103,11 +102,11 @@ void ARunnerCharacter::Move(const FInputActionValue& Value)
 {
 	const bool Increment = Value.Get<float>() > 0;
 
-	if(BMovingLane || (CurrentLane <= 0 && !Increment) || (CurrentLane >= GameMode->NumOfLanes-1 && Increment)) return;
+	if(BMovingLane || (CurrentLane <= 0 && !Increment) || (CurrentLane >= LevelManager->NumOfLanes-1 && Increment)) return;
 	
 	TargetLane = Increment ? TargetLane+1 : TargetLane-1;
 	StartLaneY = GetActorLocation().Y;
-	TargetLaneY = GameMode->GetLanePos(TargetLane);
+	TargetLaneY = LevelManager->GetLanePos(TargetLane);
 
 	MoveLaneTimer = 0;
 	BMovingLane = true;
@@ -129,14 +128,24 @@ void ARunnerCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void ARunnerCharacter::SetMoveSpeedFromMultiplier(float Multiplier)
-{
-	GetCharacterMovement()->MaxWalkSpeed = BaseMoveSpeed*Multiplier;
-}
-
 void ARunnerCharacter::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
 
 	BIsJumping = false;
+}
+
+void ARunnerCharacter::SetMoveSpeed(const float Speed)
+{
+	CurrentMoveSpeed = Speed;
+}
+
+bool ARunnerCharacter::Damage(int Amount)
+{
+	if(InvincibleTimer != 0) return false;
+
+	HitPoints -= Amount;
+	InvincibleTimer = InvincibleTime;
+
+	return true;
 }
