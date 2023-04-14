@@ -42,11 +42,12 @@ void AFloorTile::SpawnRandomObstacle()
 	Position.X = FMath::RandRange(GetTileStart().X, GetTileEnd().X);
 	Position.Y = LevelManager->GetRandomLanePos();
 	Position.Z = NewObstacle->GetUpwardsOffset().Z;
+	
+	FActorSpawnParameters SpawnInfo;
+	SpawnInfo.Owner = Owner;
 
-	const FActorSpawnParameters SpawnInfo;
-
-	GetWorld()->SpawnActor<AStaticObstacle>(NewObstacle->GetClass(), Position, FRotator::ZeroRotator, SpawnInfo)
-	->AttachToComponent(RootComponent, FAttachmentTransformRules::KeepRelativeTransform, NAME_None);
+	AStaticObstacle* SpawnedObstacle = GetWorld()->SpawnActor<AStaticObstacle>(NewObstacle->GetClass(), Position, FRotator::ZeroRotator, SpawnInfo);
+	SpawnedObstacle->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
 }
 
 // Called every frame
@@ -76,4 +77,3 @@ FVector AFloorTile::GetPositionFromStart(const FVector Start) const
 {
 	return Start + GetExtent()*FVector::ForwardVector;
 }
-

@@ -7,6 +7,7 @@
 #include "GameFramework/Actor.h"
 #include "LevelManager.generated.h"
 
+class UBoxComponent;
 class AFloorTile;
 class ARunnerCharacter;
 UCLASS()
@@ -44,6 +45,7 @@ public:
 	ARunnerCharacter* GetRunnerCharacter() const;
 	float GetRandomLanePos() const;
 	float GetLanePos(int Lane) const;
+	int GetLane(FVector Location) const;
 	float GetMoveSpeed() const;
 
 	static ALevelManager* GetLevelManager(const UObject* WorldContextObject);
@@ -56,5 +58,4 @@ protected:
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
-
 };

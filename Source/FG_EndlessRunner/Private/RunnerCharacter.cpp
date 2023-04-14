@@ -41,8 +41,9 @@ void ARunnerCharacter::BeginPlay()
 	}
 
 	BMovingLane = false;
+	BIsJumping = false;
 	TargetLane = CurrentLane;
-	HitPoints = 3;
+	HitPoints = MaxHitPoints;
 	InvincibleTimer = 0;
 
 	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -88,8 +89,8 @@ void ARunnerCharacter::MoveLane(float DeltaTime)
 	FVector Pos = GetActorLocation();
 
 	Pos.Y = FMath::Lerp(StartLaneY, TargetLaneY, MoveLaneTimer);
-		
-	SetActorLocation(Pos, true);
+	
+	SetActorLocation(Pos);
 
 	if(MoveLaneTimer >= 1.f)
 	{
@@ -98,15 +99,29 @@ void ARunnerCharacter::MoveLane(float DeltaTime)
 	}
 }
 
+
 void ARunnerCharacter::Move(const FInputActionValue& Value)
 {
 	const bool Increment = Value.Get<float>() > 0;
 
 	if(BMovingLane || (CurrentLane <= 0 && !Increment) || (CurrentLane >= LevelManager->NumOfLanes-1 && Increment)) return;
 	
-	TargetLane = Increment ? TargetLane+1 : TargetLane-1;
-	StartLaneY = GetActorLocation().Y;
+	SwitchLane(Value.Get<float>());
+}
+
+void ARunnerCharacter::SwitchLane(const int Direction)
+{
+	if(Direction == 0)
+	{
+		if(CurrentLane >= LevelManager->NumOfLanes-1) TargetLane -= 1;
+		else TargetLane += 1;
+	}
+	else TargetLane = Direction > 0 ? TargetLane+1 : TargetLane-1;
+	
+	StartLaneY = LevelManager->GetLanePos(CurrentLane);
 	TargetLaneY = LevelManager->GetLanePos(TargetLane);
+
+	OnMoveLane(Direction > 0);
 
 	MoveLaneTimer = 0;
 	BMovingLane = true;
@@ -140,12 +155,52 @@ void ARunnerCharacter::SetMoveSpeed(const float Speed)
 	CurrentMoveSpeed = Speed;
 }
 
-bool ARunnerCharacter::Damage(int Amount)
+bool ARunnerCharacter::Damage(int Amount, const AActor* SourceActor)
 {
-	if(InvincibleTimer != 0) return false;
+	if(InvincibleTimer != 0 || HitPoints <= 0) return false;
 
 	HitPoints -= Amount;
 	InvincibleTimer = InvincibleTime;
 
+	UE_LOG(LogTemp, Warning, TEXT("Output: %i"), HitPoints);
+	OnDamage(InvincibleTime);
+
+	const int DamageLane = LevelManager->GetLane(SourceActor->GetActorLocation());
+
+	UE_LOG(LogTemp, Warning, TEXT("Lane: %i"), DamageLane);
+	
+	if(BMovingLane && DamageLane == TargetLane)
+	{
+		MoveLaneTimer = 1-MoveLaneTimer;
+
+		const int LastLane = CurrentLane;
+		CurrentLane = TargetLane;
+		TargetLane = LastLane;
+
+		StartLaneY = LevelManager->GetLanePos(CurrentLane);
+		TargetLaneY = LevelManager->GetLanePos(TargetLane);
+
+		OnMoveLane(CurrentLane < TargetLane);
+		BMovingLane = true;
+	}
+	else if(!BMovingLane && DamageLane == CurrentLane)
+	{
+		SwitchLane(0);
+	}
+
+	if(HitPoints <= 0)
+	{
+		UE_LOG(LogTemp, Warning, TEXT("Death"));
+	}
+
 	return true;
+}
+
+void ARunnerCharacter::OnDamage_Implementation(float InvincibleDuration)
+{
+	
+}
+
+void ARunnerCharacter::OnMoveLane_Implementation(bool MoveRight)
+{
 }

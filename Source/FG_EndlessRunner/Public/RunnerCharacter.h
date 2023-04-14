@@ -37,6 +37,9 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Runner Settings")
 	float InvincibleTime = .5f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Runner Settings")
+	int MaxHitPoints = 3;
+
 	void SetMoveSpeed(float Speed);
 
 	UFUNCTION(BlueprintCallable, Category=Character)
@@ -45,7 +48,15 @@ public:
 	UFUNCTION(BlueprintCallable, Category=Character)
 	float GetMoveSpeed() const {return CurrentMoveSpeed;}
 
-	bool Damage(int Amount);
+	bool Damage(int Amount, const AActor* SourceActor);
+	
+	UFUNCTION(BlueprintNativeEvent, Category=Character)
+	void OnDamage(float InvincibleDuration);
+	virtual void OnDamage_Implementation(float InvincibleDuration);
+
+	UFUNCTION(BlueprintNativeEvent, Category=Character)
+	void OnMoveLane(bool MoveRight);
+	virtual void OnMoveLane_Implementation(bool MoveRight);
 
 protected:
 	virtual void BeginPlay() override;
@@ -60,6 +71,8 @@ protected:
 	bool BIsJumping;
 
 	void MoveLane(float DeltaTime);
+
+	void SwitchLane(int Direction);
 
 	TObjectPtr<ALevelManager> LevelManager;
 

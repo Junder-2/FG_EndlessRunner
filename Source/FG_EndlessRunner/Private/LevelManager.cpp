@@ -5,12 +5,14 @@
 
 #include "FloorTile.h"
 #include "RunnerCharacter.h"
+#include "StaticObstacle.h"
+#include "Components/BoxComponent.h"
 #include "Kismet/GameplayStatics.h"
+#include "Kismet/KismetMathLibrary.h"
 
 // Sets default values
 ALevelManager::ALevelManager()
 {
- 	// Set this actor to call Tick() every frame.  You can turn this off to improve performance if you don't need it.
 	PrimaryActorTick.bCanEverTick = true;
 }
 
@@ -45,7 +47,15 @@ void ALevelManager::Tick(float DeltaSeconds)
 	{
 		if(CurrentFloorTiles.First()->GetActorLocation().X < -5000.f)
 		{
+			TArray<AActor*> temp;
+			CurrentFloorTiles.First()->GetAttachedActors(temp);
+			
+			for (AActor* CActor : temp)
+			{
+				CActor->Destroy();
+			}
 			CurrentFloorTiles.First()->Destroy();
+			
 			CurrentFloorTiles.PopFirst();
 			SpawnRandomFloorTile();
 		}
@@ -65,6 +75,11 @@ float ALevelManager::GetRandomLanePos() const
 float ALevelManager::GetLanePos(int Lane) const
 {
 	return FMath::Lerp(-TotalWidth*.5f, TotalWidth*.5f, (float)Lane/(NumOfLanes-1));
+}
+
+int ALevelManager::GetLane(FVector Location) const
+{
+	return UKismetMathLibrary::NormalizeToRange(Location.Y, -TotalWidth*.5f, TotalWidth*.5f) * (NumOfLanes-1);
 }
 
 float ALevelManager::GetMoveSpeed() const
@@ -89,8 +104,6 @@ void ALevelManager::SpawnRandomFloorTile()
 	{
 		const AFloorTile* LastFloorTile = CurrentFloorTiles.Last();
 		Position = NewFloorTile->GetPositionFromStart(LastFloorTile->GetTileEnd());
-		UE_LOG(LogTemp, Warning, TEXT("Output: %s"), *LastFloorTile->GetActorLocation().ToString());
-		UE_LOG(LogTemp, Warning, TEXT("Output: %f"), LastFloorTile->GetExtent());
 	}
 
 	const FActorSpawnParameters SpawnInfo;

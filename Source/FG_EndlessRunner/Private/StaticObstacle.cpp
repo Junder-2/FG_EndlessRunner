@@ -12,6 +12,8 @@ AStaticObstacle::AStaticObstacle()
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));
 	CollisionBox->InitBoxExtent(FVector(50.f, 50.f, 50.f));
 	CollisionBox->SetCollisionProfileName(UCollisionProfile::BlockAllDynamic_ProfileName);
+
+	RootComponent = CollisionBox;
 }
 
 FVector AStaticObstacle::GetUpwardsOffset() const
@@ -26,7 +28,20 @@ bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, 
 
 	if(ARunnerCharacter* Player = Cast<ARunnerCharacter>(Other))
 	{
-		if(Player->Damage(1))
+		if(Player->Damage(1, this))
+		{
+			CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
+		}
+	}
+}
+
+void AStaticObstacle::NotifyActorBeginOverlap(AActor* OtherActor)
+{
+	Super::NotifyActorBeginOverlap(OtherActor);
+
+	if(ARunnerCharacter* Player = Cast<ARunnerCharacter>(OtherActor))
+	{
+		if(Player->Damage(1, this))
 		{
 			CollisionBox->SetCollisionEnabled(ECollisionEnabled::NoCollision);
 		}

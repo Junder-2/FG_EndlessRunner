@@ -42,5 +42,4 @@ public:
 	FVector GetTileStart() const;
 	FVector GetTileEnd() const;
 	FVector GetPositionFromStart(FVector Start) const;
-
 };
