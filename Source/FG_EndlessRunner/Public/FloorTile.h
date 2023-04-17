@@ -3,7 +3,6 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "FG_EndlessRunner/FG_EndlessRunnerGameModeBase.h"
 #include "GameFramework/Actor.h"
 #include "FloorTile.generated.h"
 
@@ -20,11 +19,9 @@ class FG_ENDLESSRUNNER_API AFloorTile : public AActor
 	TObjectPtr<UBoxComponent> FloorCollision;
 	
 public:	
-	// Sets default values for this actor's properties
 	AFloorTile();
 
 protected:
-	// Called when the game starts or when spawned
 	virtual void BeginPlay() override;
 
 	TObjectPtr<ALevelManager> LevelManager;

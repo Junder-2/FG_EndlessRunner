@@ -1,5 +1,8 @@
 #include "CharacterCamera.h"
 
+#include "Camera/CameraComponent.h"
+#include "GameFramework/SpringArmComponent.h"
+
 // Sets default values for this component's properties
 UCharacterCamera::UCharacterCamera()
 {
@@ -40,10 +43,8 @@ void UCharacterCamera::BeginPlay()
 void UCharacterCamera::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
-
-	if(!bAutoCamera) return;
 	
-	if(IdleTimer >= IdleTime)
+	if(IdleTimer >= IdleTime || bAutoCamera)
 	{
 		if (const APawn* OwningPawn = Cast<APawn>(GetOwner()))
 		{
@@ -65,6 +66,8 @@ void UCharacterCamera::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 
 void UCharacterCamera::AddLookInput(float Pitch, float Yaw)
 {
+	if(bAutoCamera) return;
+	
 	if (APawn* OwningPawn = Cast<APawn>(GetOwner()))
 	{
 		OwningPawn->AddControllerYawInput(Yaw);

@@ -21,6 +21,7 @@ void ALevelManager::BeginPlay()
 	Super::BeginPlay();	
 
 	RunnerCharacter = Cast<ARunnerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
+	RunnerCharacter->OnDamageEvent.AddUObject(this, &ALevelManager::OnDamage);
 
 	CurrentGameSpeed = 1.f;
 
@@ -34,9 +35,16 @@ void ALevelManager::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
-	//if(IsPaused()) return;
+	if(CurrentAcceleration != 1)
+	{
+		CurrentAcceleration += DeltaSeconds*SpeedAcceleration;
 
-	CurrentGameSpeed += DeltaSeconds*AddedSpeedPerSecond;
+		if(CurrentAcceleration > 1.f) CurrentAcceleration = 1;
+	}
+
+	CurrentGameSpeed += DeltaSeconds*AddedSpeedPerSecond*CurrentAcceleration;
+
+	RawScore += DeltaSeconds*CurrentGameSpeed*PointsFromSpeed*FMath::Max(CurrentAcceleration, 0);
 
 	if(RunnerCharacter != nullptr)
 	{
@@ -60,6 +68,30 @@ void ALevelManager::Tick(float DeltaSeconds)
 			SpawnRandomFloorTile();
 		}
 	}
+}
+
+void ALevelManager::SpawnRandomFloorTile()
+{
+	if(FloorTilesPrefabs.IsEmpty()) return;
+
+	const AFloorTile* NewFloorTile = FloorTilesPrefabs[FMath::RandRange(0, FloorTilesPrefabs.Num()-1)].GetDefaultObject();
+	
+	FVector Position = FVector(-NewFloorTile->GetExtent(), 0, 0);
+	
+	if(!CurrentFloorTiles.IsEmpty())
+	{
+		const AFloorTile* LastFloorTile = CurrentFloorTiles.Last();
+		Position = NewFloorTile->GetPositionFromStart(LastFloorTile->GetTileEnd());
+	}
+
+	const FActorSpawnParameters SpawnInfo;
+
+	CurrentFloorTiles.PushLast(GetWorld()->SpawnActor<AFloorTile>(NewFloorTile->GetClass(), Position, FRotator::ZeroRotator, SpawnInfo));
+}
+
+void ALevelManager::OnDamage()
+{
+	CurrentAcceleration = -.5;
 }
 
 ARunnerCharacter* ALevelManager::GetRunnerCharacter() const
@@ -87,26 +119,12 @@ float ALevelManager::GetMoveSpeed() const
 	return BaseMoveSpeed * CurrentGameSpeed;
 }
 
+int ALevelManager::GetCurrentScore() const
+{
+	return RawScore;
+}
+
 ALevelManager* ALevelManager::GetLevelManager(const UObject* WorldContextObject)
 {
 	return Cast<ALevelManager>(UGameplayStatics::GetActorOfClass(WorldContextObject, StaticClass()));
-}
-
-void ALevelManager::SpawnRandomFloorTile()
-{
-	if(FloorTilesPrefabs.IsEmpty()) return;
-
-	const AFloorTile* NewFloorTile = FloorTilesPrefabs[FMath::RandRange(0, FloorTilesPrefabs.Num()-1)].GetDefaultObject();
-	
-	FVector Position = FVector(-NewFloorTile->GetExtent(), 0, 0);
-	
-	if(!CurrentFloorTiles.IsEmpty())
-	{
-		const AFloorTile* LastFloorTile = CurrentFloorTiles.Last();
-		Position = NewFloorTile->GetPositionFromStart(LastFloorTile->GetTileEnd());
-	}
-
-	const FActorSpawnParameters SpawnInfo;
-
-	CurrentFloorTiles.PushLast(GetWorld()->SpawnActor<AFloorTile>(NewFloorTile->GetClass(), Position, FRotator::ZeroRotator, SpawnInfo));
 }

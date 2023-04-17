@@ -2,8 +2,11 @@
 
 
 #include "RunnerCharacter.h"
+
+#include "CharacterCamera.h"
 #include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
+#include "LevelManager.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -96,41 +99,21 @@ void ARunnerCharacter::MoveLane(float DeltaTime)
 	{
 		BMovingLane = false;
 		CurrentLane = TargetLane;
+
+		int Value;
+		if(!MoveInputQueue.IsEmpty() && MoveInputQueue.Dequeue(Value))
+		{
+			SwitchLane(Value);
+		}
 	}
 }
-
 
 void ARunnerCharacter::Move(const FInputActionValue& Value)
 {
-	const bool Increment = Value.Get<float>() > 0;
-
-	if(BMovingLane || (CurrentLane <= 0 && !Increment) || (CurrentLane >= LevelManager->NumOfLanes-1 && Increment)) return;
-	
-	SwitchLane(Value.Get<float>());
-}
-
-void ARunnerCharacter::SwitchLane(const int Direction)
-{
-	if(Direction == 0)
-	{
-		if(CurrentLane >= LevelManager->NumOfLanes-1) TargetLane -= 1;
-		else TargetLane += 1;
-	}
-	else TargetLane = Direction > 0 ? TargetLane+1 : TargetLane-1;
-	
-	StartLaneY = LevelManager->GetLanePos(CurrentLane);
-	TargetLaneY = LevelManager->GetLanePos(TargetLane);
-
-	OnMoveLane(Direction > 0);
-
-	MoveLaneTimer = 0;
-	BMovingLane = true;
-}
-
-void ARunnerCharacter::Jump(const FInputActionValue& Value)
-{
-	BIsJumping = true;
-	Super::Jump();
+	if(BMovingLane)
+		MoveInputQueue.Enqueue(Value.Get<float>());
+	else
+		SwitchLane(Value.Get<float>());
 }
 
 void ARunnerCharacter::Look(const FInputActionValue& Value)
@@ -143,6 +126,12 @@ void ARunnerCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
+void ARunnerCharacter::Jump(const FInputActionValue& Value)
+{
+	BIsJumping = true;
+	Super::Jump();
+}
+
 void ARunnerCharacter::Landed(const FHitResult& Hit)
 {
 	Super::Landed(Hit);
@@ -150,9 +139,35 @@ void ARunnerCharacter::Landed(const FHitResult& Hit)
 	BIsJumping = false;
 }
 
-void ARunnerCharacter::SetMoveSpeed(const float Speed)
+void ARunnerCharacter::SwitchLane(const int Direction)
 {
-	CurrentMoveSpeed = Speed;
+	const bool Increment = Direction > 0;
+	const int NumOfLanes = LevelManager->NumOfLanes-1;
+	
+	if((CurrentLane <= 0 && !Increment) || (CurrentLane >= NumOfLanes && Increment) && Direction != 0) return;
+	
+	TargetLane = Increment ? TargetLane+1 : TargetLane-1;
+	
+	StartLaneY = LevelManager->GetLanePos(CurrentLane);
+	TargetLaneY = LevelManager->GetLanePos(TargetLane);
+
+	OnMoveLane(Increment);
+
+	MoveLaneTimer = 0;
+	BMovingLane = true;
+}
+
+void ARunnerCharacter::SwitchRandomLane()
+{
+	const int NumOfLanes = LevelManager->NumOfLanes-1;
+
+	int Direction;
+	
+	if(CurrentLane >= NumOfLanes) Direction = -1;
+	else if(CurrentLane <= 0) Direction = 1;
+	else Direction = FMath::RandBool() ? -1 : 1;
+
+	SwitchLane(Direction);
 }
 
 bool ARunnerCharacter::Damage(int Amount, const AActor* SourceActor)
@@ -164,13 +179,15 @@ bool ARunnerCharacter::Damage(int Amount, const AActor* SourceActor)
 
 	UE_LOG(LogTemp, Warning, TEXT("Output: %i"), HitPoints);
 	OnDamage(InvincibleTime);
+	OnDamageEvent.Broadcast();
 
 	const int DamageLane = LevelManager->GetLane(SourceActor->GetActorLocation());
 
 	UE_LOG(LogTemp, Warning, TEXT("Lane: %i"), DamageLane);
 	
-	if(BMovingLane && DamageLane == TargetLane)
+	if(BMovingLane && DamageLane == TargetLane) //Might move not super pretty placement
 	{
+		
 		MoveLaneTimer = 1-MoveLaneTimer;
 
 		const int LastLane = CurrentLane;
@@ -180,12 +197,14 @@ bool ARunnerCharacter::Damage(int Amount, const AActor* SourceActor)
 		StartLaneY = LevelManager->GetLanePos(CurrentLane);
 		TargetLaneY = LevelManager->GetLanePos(TargetLane);
 
+		MoveInputQueue.Empty();
 		OnMoveLane(CurrentLane < TargetLane);
 		BMovingLane = true;
 	}
 	else if(!BMovingLane && DamageLane == CurrentLane)
 	{
-		SwitchLane(0);
+		MoveInputQueue.Empty();
+		SwitchRandomLane();
 	}
 
 	if(HitPoints <= 0)
@@ -196,9 +215,13 @@ bool ARunnerCharacter::Damage(int Amount, const AActor* SourceActor)
 	return true;
 }
 
+void ARunnerCharacter::SetMoveSpeed(const float Speed)
+{
+	CurrentMoveSpeed = Speed;
+}
+
 void ARunnerCharacter::OnDamage_Implementation(float InvincibleDuration)
 {
-	
 }
 
 void ARunnerCharacter::OnMoveLane_Implementation(bool MoveRight)

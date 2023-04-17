@@ -50,7 +50,6 @@ void AFloorTile::SpawnRandomObstacle()
 	SpawnedObstacle->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
 }
 
-// Called every frame
 void AFloorTile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);

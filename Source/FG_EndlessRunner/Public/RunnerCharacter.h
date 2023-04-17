@@ -1,12 +1,14 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "CharacterCamera.h"
 #include "InputAction.h"
-#include "LevelManager.h"
-#include "FG_EndlessRunner/FG_EndlessRunnerGameModeBase.h"
 #include "GameFramework/Character.h"
 #include "RunnerCharacter.generated.h"
+
+DECLARE_EVENT(ARunnerCharacter, FPlayerDamageEvent)
+
+class UCharacterCamera;
+class ALevelManager;
 
 UCLASS()
 class FG_ENDLESSRUNNER_API ARunnerCharacter : public ACharacter
@@ -43,16 +45,21 @@ public:
 	void SetMoveSpeed(float Speed);
 
 	UFUNCTION(BlueprintCallable, Category=Character)
-	bool GetIsJumping() const {return BIsJumping;}
+	bool GetIsJumping() const { return BIsJumping; }
 
 	UFUNCTION(BlueprintCallable, Category=Character)
-	float GetMoveSpeed() const {return CurrentMoveSpeed;}
+	float GetMoveSpeed() const { return CurrentMoveSpeed; }
+	
+	UFUNCTION(BlueprintCallable, Category=Character)
+	int GetHitPoints() const { return HitPoints; }
 
 	bool Damage(int Amount, const AActor* SourceActor);
+
 	
 	UFUNCTION(BlueprintNativeEvent, Category=Character)
 	void OnDamage(float InvincibleDuration);
 	virtual void OnDamage_Implementation(float InvincibleDuration);
+	FPlayerDamageEvent OnDamageEvent;
 
 	UFUNCTION(BlueprintNativeEvent, Category=Character)
 	void OnMoveLane(bool MoveRight);
@@ -62,6 +69,7 @@ protected:
 	virtual void BeginPlay() override;
 
 	void Move(const FInputActionValue& Value);
+	TQueue<int> MoveInputQueue;
 
 	void Jump(const FInputActionValue& Value);
 	
@@ -73,6 +81,8 @@ protected:
 	void MoveLane(float DeltaTime);
 
 	void SwitchLane(int Direction);
+
+	void SwitchRandomLane();
 
 	TObjectPtr<ALevelManager> LevelManager;
 

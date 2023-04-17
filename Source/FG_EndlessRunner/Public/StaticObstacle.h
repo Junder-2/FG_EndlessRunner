@@ -16,13 +16,11 @@ class FG_ENDLESSRUNNER_API AStaticObstacle : public AActor
 	TObjectPtr<UBoxComponent> CollisionBox;
 	
 public:	
-	// Sets default values for this actor's properties
 	AStaticObstacle();
 
 	FVector GetUpwardsOffset() const;
 
 protected:
-	virtual void NotifyHit(UPrimitiveComponent* MyComp, AActor* Other, UPrimitiveComponent* OtherComp, bool bSelfMoved, FVector HitLocation, FVector HitNormal, FVector NormalImpulse, const FHitResult& Hit) override;
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;
 
 };

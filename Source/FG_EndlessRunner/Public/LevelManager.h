@@ -10,13 +10,13 @@
 class UBoxComponent;
 class AFloorTile;
 class ARunnerCharacter;
+
 UCLASS()
 class FG_ENDLESSRUNNER_API ALevelManager : public AActor
 {
 	GENERATED_BODY()
 	
 public:	
-	// Sets default values for this actor's properties
 	ALevelManager();
 
 private:
@@ -35,6 +35,12 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Game Variables")
 	float BaseMoveSpeed = 40.f;
 
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Game Variables")
+	float SpeedAcceleration = .5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Game Variables")
+	float PointsFromSpeed = .1f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Game Variables")
 	TArray<TSubclassOf<AFloorTile>> FloorTilesPrefabs;
 
@@ -48,9 +54,20 @@ public:
 	int GetLane(FVector Location) const;
 	float GetMoveSpeed() const;
 
+	UFUNCTION(BlueprintCallable)
+	int GetCurrentScore() const;
+	
 	static ALevelManager* GetLevelManager(const UObject* WorldContextObject);
 
 protected:
+	UPROPERTY(Transient)
+	float CurrentAcceleration;
+	
+	UPROPERTY(Transient)
+	float RawScore;
+
+	void OnDamage();
+	
 	TDeque<AFloorTile*> CurrentFloorTiles;
 	
 	void SpawnRandomFloorTile();

@@ -2,10 +2,10 @@
 
 #include "CoreMinimal.h"
 #include "Components/ActorComponent.h"
-#include "Camera/CameraComponent.h"
-#include "GameFramework/SpringArmComponent.h"
 #include "CharacterCamera.generated.h"
 
+class USpringArmComponent;
+class UCameraComponent;
 
 UCLASS( ClassGroup=(Camera), meta=(BlueprintSpawnableComponent) )
 class FG_ENDLESSRUNNER_API UCharacterCamera : public UActorComponent
@@ -21,6 +21,7 @@ class FG_ENDLESSRUNNER_API UCharacterCamera : public UActorComponent
 public:	
 	UCharacterCamera();
 
+public:
 	void SetupAttachment(USceneComponent* InParent, FName InSocketName = NAME_None);
 
 	UPROPERTY(Category= "CharacterCamera: Settings", EditAnywhere)
@@ -35,7 +36,7 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	UPROPERTY(Transient, VisibleAnywhere)
+	UPROPERTY(Transient, VisibleAnywhere, Category="CharacterCamera: Debug")
 	float IdleTimer;
 
 public:	
