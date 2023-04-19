@@ -19,6 +19,7 @@ public:
 	AStaticObstacle();
 
 	FVector GetUpwardsOffset() const;
+	float GetForwardOffset() const;
 
 protected:
 	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;

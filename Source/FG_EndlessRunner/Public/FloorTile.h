@@ -10,6 +10,16 @@ class AStaticObstacle;
 class UBoxComponent;
 class ALevelManager;
 
+UENUM(BlueprintType)
+enum class EObstacleType : uint8
+{
+	None = 0 UMETA(Hidden),
+	Short = 1,
+	Tall = 2,
+	Num = 3 UMETA(Hidden),
+	Invalid = 4 UMETA(Hidden),
+};
+
 UCLASS()
 class FG_ENDLESSRUNNER_API AFloorTile : public AActor
 {
@@ -26,10 +36,25 @@ protected:
 
 	TObjectPtr<ALevelManager> LevelManager;
 
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tile Variables")
-	TArray<TSubclassOf<AStaticObstacle>> ObstaclePrefabs;
+	UPROPERTY(EditAnywhere, Category="Tile Variables")
+	int ObstacleRowAmount = 8;
 
-	void SpawnRandomObstacle();
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tile Variables")
+	TSubclassOf<AStaticObstacle> TallObstacle;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Tile Variables")
+	TSubclassOf<AStaticObstacle> ShortObstacle;
+	
+	void SpawnObstacle(int Lane, float NormalizedRow, EObstacleType ObstacleType);
+	void GenerateObstacles();
+	EObstacleType CheckObstacleExists(int X, int Y);
+	int CheckObstacleLane(int Y, int& OpenSpot);
+	int GetObstacleLaneOpening(int Y);
+
+	bool CanSpawnObstacle(int X, int Y, EObstacleType ObstacleType);
+	bool CheckValidObstaclePlacement(int X, int Y, EObstacleType ObstacleType);
+
+	TArray<EObstacleType> GeneratedObstacles;
 
 public:	
 	// Called every frame

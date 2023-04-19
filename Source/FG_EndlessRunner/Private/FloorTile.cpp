@@ -26,21 +26,145 @@ void AFloorTile::BeginPlay()
 	
 	LevelManager = ALevelManager::GetLevelManager(GetWorld());
 
-	for (int i = 0; i < 5; i++)
+	GenerateObstacles();
+}
+
+void AFloorTile::GenerateObstacles()
+{
+	const int NumOfLanes = LevelManager->NumOfLanes;
+	const float ObstacleDifficulty = LevelManager->ObstacleDifficulty;
+	
+	GeneratedObstacles.Init(EObstacleType::None, ObstacleRowAmount*NumOfLanes);
+
+	const int SpawnAmount = FMath::RandRange(ObstacleDifficulty-2, ObstacleDifficulty+2);
+
+	for (int i = 0; i < SpawnAmount; i++)
 	{
-		SpawnRandomObstacle();
+		int X = FMath::RandRange(0, NumOfLanes-1);
+		int Y = FMath::RandRange(0, ObstacleRowAmount-1);
+		const EObstacleType ObstacleType = static_cast<EObstacleType>(FMath::RandRange(1, static_cast<int>(EObstacleType::Num)-1));
+
+		int Failed = 0;
+
+		while (Failed < 10)
+		{
+			Failed++;
+
+			if(CanSpawnObstacle(X, Y, ObstacleType))
+			{
+				SpawnObstacle(X, (float)Y/(ObstacleRowAmount-1), ObstacleType);
+				GeneratedObstacles[X + Y*NumOfLanes] = ObstacleType;
+				break;
+			}
+			
+			X = FMath::RandRange(0, NumOfLanes-1);
+			Y = FMath::RandRange(0, ObstacleRowAmount-1);
+		}
 	}
 }
 
-void AFloorTile::SpawnRandomObstacle()
+bool AFloorTile::CanSpawnObstacle(const int X, const int Y, const EObstacleType ObstacleType)
 {
-	if(ObstaclePrefabs.IsEmpty()) return;
+	const int NumOfLanes = LevelManager->NumOfLanes;
+	
+	if(GeneratedObstacles[X + Y*NumOfLanes] != EObstacleType::None) return false;
 
-	const AStaticObstacle* NewObstacle = ObstaclePrefabs[FMath::RandRange(0, ObstaclePrefabs.Num()-1)].GetDefaultObject();
+	if(ObstacleType == EObstacleType::Tall)
+	{
+		int OpenSpot;
+		const int AlreadyInRow = CheckObstacleLane(Y, OpenSpot);
+		if(AlreadyInRow >= NumOfLanes-1) return false;
+		if(AlreadyInRow == NumOfLanes-2)
+		{
+			if(CheckObstacleExists(OpenSpot, Y-1) != EObstacleType::None) return false;
+			if(CheckObstacleExists(OpenSpot, Y+1) != EObstacleType::None) return false;
+		}
+	}
+	else if(ObstacleType == EObstacleType::Short)
+	{
+		if(CheckObstacleExists(X, Y-1) != EObstacleType::None) return false;
+		if(CheckObstacleExists(X, Y+1) != EObstacleType::None) return false;
 
+		if(CheckObstacleExists(X+1, Y+1) != EObstacleType::None) return false;
+		if(CheckObstacleExists(X-1, Y-1) != EObstacleType::None) return false;
+		if(CheckObstacleExists(X+1, Y-1) != EObstacleType::None) return false;
+		if(CheckObstacleExists(X-1, Y+1) != EObstacleType::None) return false;
+	}
+
+	return true;
+}
+
+EObstacleType AFloorTile::CheckObstacleExists(const int X, const int Y)
+{
+	const int NumOfLanes = LevelManager->NumOfLanes;
+	
+	if(X < 0 || X > NumOfLanes-1) return EObstacleType::Invalid;
+	if(Y < 0 || Y > ObstacleRowAmount-1) return EObstacleType::Invalid;
+	
+	return GeneratedObstacles[X + Y*NumOfLanes];
+}
+
+int AFloorTile::CheckObstacleLane(const int Y, int& OpenSpot)
+{
+	const int NumOfLanes = LevelManager->NumOfLanes;
+
+	int NumberOfBlocking = 0;
+
+	for (int X = 0; X < NumOfLanes; X++)
+	{
+		if(CheckObstacleExists(X, Y) != EObstacleType::None) NumberOfBlocking++;
+		else OpenSpot = X;
+	}
+
+	return NumberOfBlocking;
+}
+
+int AFloorTile::GetObstacleLaneOpening(const int Y)
+{
+	const int NumOfLanes = LevelManager->NumOfLanes;
+
+	int NumberOfBlocking = 0;
+
+	for (int X = 0; X < NumOfLanes; X++)
+	{
+		if(CheckObstacleExists(X, Y) != EObstacleType::None) NumberOfBlocking++;
+	}
+
+	return NumberOfBlocking;
+}
+
+bool AFloorTile::CheckValidObstaclePlacement(const int X, const int Y, const EObstacleType ObstacleType)
+{
+	const int NumOfLanes = LevelManager->NumOfLanes;
+	
+	if(X < 0 || X > NumOfLanes-1) return true;
+	if(Y < 0 || Y > ObstacleRowAmount-1) return true;
+
+	switch (GeneratedObstacles[X + Y*NumOfLanes])
+	{
+		case EObstacleType::None: return true;
+		case EObstacleType::Short: return ObstacleType != EObstacleType::Short;
+		case EObstacleType::Tall: return false;
+	}
+	
+	return false;
+}
+
+void AFloorTile::SpawnObstacle(const int Lane, const float NormalizedRow, const EObstacleType ObstacleType)
+{
+	AStaticObstacle* NewObstacle;
+
+	switch (ObstacleType)
+	{
+		case EObstacleType::Short: NewObstacle = ShortObstacle.GetDefaultObject(); break;
+		case EObstacleType::Tall: NewObstacle = TallObstacle.GetDefaultObject(); break;
+		default: return;
+	}
+	
 	FVector Position;
-	Position.X = FMath::RandRange(GetTileStart().X, GetTileEnd().X);
-	Position.Y = LevelManager->GetRandomLanePos();
+	float StartOffset = GetExtent()/ObstacleRowAmount;
+	Position.X = FMath::Lerp(GetTileStart().X+StartOffset, GetTileEnd().X, NormalizedRow);
+	Position.Y = LevelManager->GetLanePos(Lane);
 	Position.Z = NewObstacle->GetUpwardsOffset().Z;
 	
 	FActorSpawnParameters SpawnInfo;

@@ -32,8 +32,14 @@ public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Game Variables")
 	float AddedSpeedPerSecond = 0.1f;
 
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Game Variables")
+	float AddedObstaclesPerSecond = 0.1f;
+
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Game Variables")
 	float BaseMoveSpeed = 40.f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Game Variables")
+	int BaseObstacleAmount = 5;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Game Variables")
 	float SpeedAcceleration = .5f;
@@ -47,6 +53,9 @@ public:
 public:
 	UPROPERTY(Transient, BlueprintReadWrite, VisibleAnywhere, Category="Game Properties")
 	float CurrentGameSpeed;
+
+	UPROPERTY(Transient, BlueprintReadWrite, VisibleAnywhere, Category="Game Properties")
+	float ObstacleDifficulty;
 	
 	ARunnerCharacter* GetRunnerCharacter() const;
 	float GetRandomLanePos() const;

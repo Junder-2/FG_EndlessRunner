@@ -21,6 +21,11 @@ FVector AStaticObstacle::GetUpwardsOffset() const
 	return (CollisionBox->GetScaledBoxExtent().Z*.5f)*FVector::UpVector;
 }
 
+float AStaticObstacle::GetForwardOffset() const
+{
+	return (CollisionBox->GetScaledBoxExtent().X*.5f);
+}
+
 void AStaticObstacle::NotifyActorBeginOverlap(AActor* OtherActor)
 {
 	Super::NotifyActorBeginOverlap(OtherActor);

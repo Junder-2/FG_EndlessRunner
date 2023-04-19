@@ -24,6 +24,7 @@ void ALevelManager::BeginPlay()
 	RunnerCharacter->OnDamageEvent.AddUObject(this, &ALevelManager::OnDamage);
 
 	CurrentGameSpeed = 1.f;
+	ObstacleDifficulty = BaseObstacleAmount;
 
 	for (int i = 0; i < 10; i++)
 	{
@@ -43,6 +44,7 @@ void ALevelManager::Tick(float DeltaSeconds)
 	}
 
 	CurrentGameSpeed += DeltaSeconds*AddedSpeedPerSecond*CurrentAcceleration;
+	ObstacleDifficulty += DeltaSeconds*AddedObstaclesPerSecond*FMath::Max(CurrentAcceleration, 0);
 
 	RawScore += DeltaSeconds*CurrentGameSpeed*PointsFromSpeed*FMath::Max(CurrentAcceleration, 0);
 
