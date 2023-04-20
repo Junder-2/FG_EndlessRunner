@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "InputAction.h"
+#include "InputMappingContext.h"
 #include "GameFramework/Character.h"
 #include "RunnerCharacter.generated.h"
 

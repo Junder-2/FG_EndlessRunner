@@ -79,11 +79,22 @@ bool AFloorTile::CanSpawnObstacle(const int X, const int Y, const EObstacleType 
 			if(CheckObstacleExists(OpenSpot, Y-1) != EObstacleType::None) return false;
 			if(CheckObstacleExists(OpenSpot, Y+1) != EObstacleType::None) return false;
 		}
+
+		if(CheckObstacleExists(X, Y-1) == EObstacleType::None)
+		{
+			if(CheckObstacleExists(X, Y-2) != EObstacleType::None) return false;
+		}
+		else if(CheckObstacleExists(X, Y+1) == EObstacleType::None)
+		{
+			if(CheckObstacleExists(X, Y+2) != EObstacleType::None) return false;
+		}
 	}
 	else if(ObstacleType == EObstacleType::Short)
 	{
 		if(CheckObstacleExists(X, Y-1) != EObstacleType::None) return false;
+		if(CheckObstacleExists(X, Y-2) != EObstacleType::None) return false;
 		if(CheckObstacleExists(X, Y+1) != EObstacleType::None) return false;
+		if(CheckObstacleExists(X, Y+2) != EObstacleType::None) return false;
 
 		if(CheckObstacleExists(X+1, Y+1) != EObstacleType::None) return false;
 		if(CheckObstacleExists(X-1, Y-1) != EObstacleType::None) return false;

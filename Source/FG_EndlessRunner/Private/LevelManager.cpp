@@ -43,7 +43,7 @@ void ALevelManager::Tick(float DeltaSeconds)
 		if(CurrentAcceleration > 1.f) CurrentAcceleration = 1;
 	}
 
-	CurrentGameSpeed += DeltaSeconds*AddedSpeedPerSecond*CurrentAcceleration;
+	CurrentGameSpeed += DeltaSeconds*CurrentAcceleration;
 	ObstacleDifficulty += DeltaSeconds*AddedObstaclesPerSecond*FMath::Max(CurrentAcceleration, 0);
 
 	RawScore += DeltaSeconds*CurrentGameSpeed*PointsFromSpeed*FMath::Max(CurrentAcceleration, 0);
@@ -118,7 +118,7 @@ int ALevelManager::GetLane(FVector Location) const
 
 float ALevelManager::GetMoveSpeed() const
 {
-	return BaseMoveSpeed * CurrentGameSpeed;
+	return BaseMoveSpeed + CurrentGameSpeed*AddedSpeedPerSecond;
 }
 
 int ALevelManager::GetCurrentScore() const
