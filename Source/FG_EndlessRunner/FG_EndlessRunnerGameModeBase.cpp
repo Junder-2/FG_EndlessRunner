@@ -2,13 +2,14 @@
 
 
 #include "FG_EndlessRunnerGameModeBase.h"
+#include "Kismet/GameplayStatics.h"
 
 AFG_EndlessRunnerGameModeBase::AFG_EndlessRunnerGameModeBase()
 {
-	// set default pawn class to our Blueprinted character
 	static ConstructorHelpers::FClassFinder<APawn> PlayerPawnBPClass(TEXT("/Game/RunnerCharacter/Blueprints/BP_RunnerCharacter"));
-	if (PlayerPawnBPClass.Class != NULL)
+	if (PlayerPawnBPClass.Class != nullptr)
 	{
 		DefaultPawnClass = PlayerPawnBPClass.Class;
 	}
 }
+

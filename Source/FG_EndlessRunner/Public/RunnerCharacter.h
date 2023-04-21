@@ -6,7 +6,8 @@
 #include "GameFramework/Character.h"
 #include "RunnerCharacter.generated.h"
 
-DECLARE_EVENT(ARunnerCharacter, FPlayerDamageEvent)
+DECLARE_EVENT(ARunnerCharacter, FRunnerDamage)
+DECLARE_EVENT(ARunnerCharacter, FRunnerDeath)
 
 class UCharacterCamera;
 class ALevelManager;
@@ -60,7 +61,9 @@ public:
 	UFUNCTION(BlueprintNativeEvent, Category=Character)
 	void OnDamage(float InvincibleDuration);
 	virtual void OnDamage_Implementation(float InvincibleDuration);
-	FPlayerDamageEvent OnDamageEvent;
+	FRunnerDamage OnDamageEvent;
+
+	FRunnerDeath OnDeathEvent;
 
 	UFUNCTION(BlueprintNativeEvent, Category=Character)
 	void OnMoveLane(bool MoveRight);

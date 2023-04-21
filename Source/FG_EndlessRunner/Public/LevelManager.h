@@ -65,6 +65,9 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	int GetCurrentScore() const;
+
+	UFUNCTION(BlueprintCallable)
+	int GetHighScore() const;
 	
 	static ALevelManager* GetLevelManager(const UObject* WorldContextObject);
 
@@ -75,11 +78,23 @@ protected:
 	UPROPERTY(Transient)
 	float RawScore;
 
+	UPROPERTY(Transient)
+	int CurrentHighScore;
+
 	void OnDamage();
 	
 	TDeque<AFloorTile*> CurrentFloorTiles;
 	
 	void SpawnRandomFloorTile();
+
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnDeath();
+
+	UFUNCTION(BlueprintCallable)
+	void SaveHighScore();
+
+	UPROPERTY()
+	class URunnerSaveGame* SaveGame;
 
 protected:
 	virtual void BeginPlay() override;

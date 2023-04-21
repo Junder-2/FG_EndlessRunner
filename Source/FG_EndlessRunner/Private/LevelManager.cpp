@@ -5,10 +5,11 @@
 
 #include "FloorTile.h"
 #include "RunnerCharacter.h"
-#include "StaticObstacle.h"
-#include "Components/BoxComponent.h"
+#include "RunnerSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
+
+#define SlotName "SaveSlot"
 
 // Sets default values
 ALevelManager::ALevelManager()
@@ -22,9 +23,22 @@ void ALevelManager::BeginPlay()
 
 	RunnerCharacter = Cast<ARunnerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
 	RunnerCharacter->OnDamageEvent.AddUObject(this, &ALevelManager::OnDamage);
+	RunnerCharacter->OnDeathEvent.AddUObject(this, &ALevelManager::OnDeath);
 
 	CurrentGameSpeed = 1.f;
 	ObstacleDifficulty = BaseObstacleAmount;
+
+	if(UGameplayStatics::DoesSaveGameExist(SlotName, 0))
+	{
+		SaveGame = Cast<URunnerSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
+		CurrentHighScore = SaveGame->HighScore;
+	}
+	else
+	{
+		UE_LOG(LogTemp, Warning, TEXT("No Save"));
+		SaveGame = Cast<URunnerSaveGame>(UGameplayStatics::CreateSaveGameObject(URunnerSaveGame::StaticClass()));
+		CurrentHighScore = 0;
+	}
 
 	for (int i = 0; i < 10; i++)
 	{
@@ -47,6 +61,11 @@ void ALevelManager::Tick(float DeltaSeconds)
 	ObstacleDifficulty += DeltaSeconds*AddedObstaclesPerSecond*FMath::Max(CurrentAcceleration, 0);
 
 	RawScore += DeltaSeconds*CurrentGameSpeed*PointsFromSpeed*FMath::Max(CurrentAcceleration, 0);
+
+	if(RawScore > CurrentHighScore)
+	{
+		CurrentHighScore = RawScore;
+	}
 
 	if(RunnerCharacter != nullptr)
 	{
@@ -124,6 +143,22 @@ float ALevelManager::GetMoveSpeed() const
 int ALevelManager::GetCurrentScore() const
 {
 	return RawScore;
+}
+
+int ALevelManager::GetHighScore() const
+{
+	return CurrentHighScore;	
+}
+
+void ALevelManager::SaveHighScore()
+{
+	if(!SaveGame)
+	{
+		SaveGame = Cast<URunnerSaveGame>(UGameplayStatics::CreateSaveGameObject(URunnerSaveGame::StaticClass()));
+	}
+
+	SaveGame->HighScore = CurrentHighScore;
+	UGameplayStatics::SaveGameToSlot(SaveGame, SlotName, 0);
 }
 
 ALevelManager* ALevelManager::GetLevelManager(const UObject* WorldContextObject)

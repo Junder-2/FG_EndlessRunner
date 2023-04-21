@@ -6,9 +6,6 @@
 #include "GameFramework/GameModeBase.h"
 #include "FG_EndlessRunnerGameModeBase.generated.h"
 
-class AFloorTile;
-class ARunnerCharacter;
-
 UCLASS()
 class FG_ENDLESSRUNNER_API AFG_EndlessRunnerGameModeBase : public AGameModeBase
 {
@@ -16,5 +13,4 @@ class FG_ENDLESSRUNNER_API AFG_EndlessRunnerGameModeBase : public AGameModeBase
 
 public:
 	AFG_EndlessRunnerGameModeBase();
-	
 };

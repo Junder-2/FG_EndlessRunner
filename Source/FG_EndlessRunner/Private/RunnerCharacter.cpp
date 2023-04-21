@@ -186,8 +186,7 @@ bool ARunnerCharacter::Damage(int Amount, const AActor* SourceActor)
 	UE_LOG(LogTemp, Warning, TEXT("Lane: %i"), DamageLane);
 	
 	if(BMovingLane && DamageLane == TargetLane) //Might move not super pretty placement
-	{
-		
+	{		
 		MoveLaneTimer = 1-MoveLaneTimer;
 
 		const int LastLane = CurrentLane;
@@ -209,7 +208,8 @@ bool ARunnerCharacter::Damage(int Amount, const AActor* SourceActor)
 
 	if(HitPoints <= 0)
 	{
-		UE_LOG(LogTemp, Warning, TEXT("Death"));
+		OnDeathEvent.Broadcast();
+		//UE_LOG(LogTemp, Warning, TEXT("Death"));
 	}
 
 	return true;
