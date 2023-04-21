@@ -1,13 +1,9 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "FloorTile.h"
 
 #include "LevelManager.h"
 #include "StaticObstacle.h"
 #include "Components/BoxComponent.h"
 
-// Sets default values
 AFloorTile::AFloorTile()
 {
 	FloorCollision = CreateDefaultSubobject<UBoxComponent>(TEXT("FloorCollision"));
@@ -19,7 +15,6 @@ AFloorTile::AFloorTile()
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-// Called when the game starts or when spawned
 void AFloorTile::BeginPlay()
 {
 	Super::BeginPlay();
@@ -77,7 +72,9 @@ bool AFloorTile::CanSpawnObstacle(const int X, const int Y, const EObstacleType 
 		if(AlreadyInRow == NumOfLanes-2)
 		{
 			if(CheckObstacleExists(OpenSpot, Y-1) != EObstacleType::None) return false;
+			if(CheckObstacleExists(OpenSpot, Y-2) != EObstacleType::None) return false;
 			if(CheckObstacleExists(OpenSpot, Y+1) != EObstacleType::None) return false;
+			if(CheckObstacleExists(OpenSpot, Y+2) != EObstacleType::None) return false;
 		}
 
 		if(CheckObstacleExists(X, Y-1) == EObstacleType::None)
@@ -144,23 +141,6 @@ int AFloorTile::GetObstacleLaneOpening(const int Y)
 	return NumberOfBlocking;
 }
 
-bool AFloorTile::CheckValidObstaclePlacement(const int X, const int Y, const EObstacleType ObstacleType)
-{
-	const int NumOfLanes = LevelManager->NumOfLanes;
-	
-	if(X < 0 || X > NumOfLanes-1) return true;
-	if(Y < 0 || Y > ObstacleRowAmount-1) return true;
-
-	switch (GeneratedObstacles[X + Y*NumOfLanes])
-	{
-		case EObstacleType::None: return true;
-		case EObstacleType::Short: return ObstacleType != EObstacleType::Short;
-		case EObstacleType::Tall: return false;
-	}
-	
-	return false;
-}
-
 void AFloorTile::SpawnObstacle(const int Lane, const float NormalizedRow, const EObstacleType ObstacleType)
 {
 	AStaticObstacle* NewObstacle;
@@ -172,8 +152,8 @@ void AFloorTile::SpawnObstacle(const int Lane, const float NormalizedRow, const 
 		default: return;
 	}
 	
+	const float StartOffset = GetExtent()/ObstacleRowAmount;
 	FVector Position;
-	float StartOffset = GetExtent()/ObstacleRowAmount;
 	Position.X = FMath::Lerp(GetTileStart().X+StartOffset, GetTileEnd().X, NormalizedRow);
 	Position.Y = LevelManager->GetLanePos(Lane);
 	Position.Z = NewObstacle->GetUpwardsOffset().Z;

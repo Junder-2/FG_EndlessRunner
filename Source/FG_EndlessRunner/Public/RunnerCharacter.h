@@ -44,19 +44,17 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Runner Settings")
 	int MaxHitPoints = 3;
 
-	void SetMoveSpeed(float Speed);
-
 	UFUNCTION(BlueprintCallable, Category=Character)
 	bool GetIsJumping() const { return BIsJumping; }
+	
+	UFUNCTION(BlueprintCallable, Category=Character)
+	int GetHitPoints() const { return HitPoints; }	
 
 	UFUNCTION(BlueprintCallable, Category=Character)
 	float GetMoveSpeed() const { return CurrentMoveSpeed; }
-	
-	UFUNCTION(BlueprintCallable, Category=Character)
-	int GetHitPoints() const { return HitPoints; }
+	void SetMoveSpeed(float Speed);
 
 	bool Damage(int Amount, const AActor* SourceActor);
-
 	
 	UFUNCTION(BlueprintNativeEvent, Category=Character)
 	void OnDamage(float InvincibleDuration);

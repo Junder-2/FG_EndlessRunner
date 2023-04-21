@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "LevelManager.h"
 
 #include "FloorTile.h"
@@ -9,9 +6,8 @@
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
-#define SlotName "SaveSlot"
+#define SLOT_NAME "SaveSlot"
 
-// Sets default values
 ALevelManager::ALevelManager()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -28,9 +24,9 @@ void ALevelManager::BeginPlay()
 	CurrentGameSpeed = 1.f;
 	ObstacleDifficulty = BaseObstacleAmount;
 
-	if(UGameplayStatics::DoesSaveGameExist(SlotName, 0))
+	if(UGameplayStatics::DoesSaveGameExist(SLOT_NAME, 0))
 	{
-		SaveGame = Cast<URunnerSaveGame>(UGameplayStatics::LoadGameFromSlot(SlotName, 0));
+		SaveGame = Cast<URunnerSaveGame>(UGameplayStatics::LoadGameFromSlot(SLOT_NAME, 0));
 		CurrentHighScore = SaveGame->HighScore;
 	}
 	else
@@ -125,12 +121,12 @@ float ALevelManager::GetRandomLanePos() const
 	return GetLanePos(FMath::RandRange(0, NumOfLanes-1));
 }
 
-float ALevelManager::GetLanePos(int Lane) const
+float ALevelManager::GetLanePos(const int Lane) const
 {
 	return FMath::Lerp(-TotalWidth*.5f, TotalWidth*.5f, (float)Lane/(NumOfLanes-1));
 }
 
-int ALevelManager::GetLane(FVector Location) const
+int ALevelManager::GetLane(const FVector Location) const
 {
 	return UKismetMathLibrary::NormalizeToRange(Location.Y, -TotalWidth*.5f, TotalWidth*.5f) * (NumOfLanes-1);
 }
@@ -158,7 +154,7 @@ void ALevelManager::SaveHighScore()
 	}
 
 	SaveGame->HighScore = CurrentHighScore;
-	UGameplayStatics::SaveGameToSlot(SaveGame, SlotName, 0);
+	UGameplayStatics::SaveGameToSlot(SaveGame, SLOT_NAME, 0);
 }
 
 ALevelManager* ALevelManager::GetLevelManager(const UObject* WorldContextObject)

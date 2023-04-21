@@ -22,7 +22,7 @@ public:
 	UCharacterCamera();
 
 public:
-	void SetupAttachment(USceneComponent* InParent, FName InSocketName = NAME_None);
+	void SetupAttachment(USceneComponent* InParent, FName InSocketName = NAME_None) const;
 
 	UPROPERTY(Category= "CharacterCamera: Settings", EditAnywhere)
 	bool bAutoCamera = true;
@@ -44,7 +44,5 @@ public:
 
 	void AddLookInput(float Pitch, float Yaw);
 
-	void SnapCamera();
-
-		
+	void SnapCamera();		
 };

@@ -1,12 +1,8 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "StaticObstacle.h"
 
 #include "RunnerCharacter.h"
 #include "Components/BoxComponent.h"
 
-// Sets default values
 AStaticObstacle::AStaticObstacle()
 {
 	CollisionBox = CreateDefaultSubobject<UBoxComponent>(TEXT("Collision"));

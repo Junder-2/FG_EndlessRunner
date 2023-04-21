@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -52,12 +50,10 @@ protected:
 	int GetObstacleLaneOpening(int Y);
 
 	bool CanSpawnObstacle(int X, int Y, EObstacleType ObstacleType);
-	bool CheckValidObstaclePlacement(int X, int Y, EObstacleType ObstacleType);
 
 	TArray<EObstacleType> GeneratedObstacles;
 
 public:	
-	// Called every frame
 	virtual void Tick(float DeltaTime) override;
 
 	float GetExtent() const;

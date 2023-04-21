@@ -1,6 +1,3 @@
-// Copyright Epic Games, Inc. All Rights Reserved.
-
-
 #include "FG_EndlessRunnerGameModeBase.h"
 #include "Kismet/GameplayStatics.h"
 

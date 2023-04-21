@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "RunnerCharacter.h"
 
 #include "CharacterCamera.h"
@@ -11,7 +8,6 @@
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
 
-// Sets default values
 ARunnerCharacter::ARunnerCharacter()
 {
 	PrimaryActorTick.bCanEverTick = true;
@@ -49,7 +45,7 @@ void ARunnerCharacter::BeginPlay()
 	HitPoints = MaxHitPoints;
 	InvincibleTimer = 0;
 
-	if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	if (const APlayerController* PlayerController = Cast<APlayerController>(Controller))
 	{
 		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
 		{
@@ -100,8 +96,7 @@ void ARunnerCharacter::MoveLane(float DeltaTime)
 		BMovingLane = false;
 		CurrentLane = TargetLane;
 
-		int Value;
-		if(!MoveInputQueue.IsEmpty() && MoveInputQueue.Dequeue(Value))
+		if(int Value; !MoveInputQueue.IsEmpty() && MoveInputQueue.Dequeue(Value))
 		{
 			SwitchLane(Value);
 		}

@@ -3,7 +3,6 @@
 #include "Camera/CameraComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 
-// Sets default values for this component's properties
 UCharacterCamera::UCharacterCamera()
 {
 	CameraBoom = CreateDefaultSubobject<USpringArmComponent>(TEXT("CameraBoom"));
@@ -13,7 +12,7 @@ UCharacterCamera::UCharacterCamera()
 	// Create a follow camera
 	FollowCamera = CreateDefaultSubobject<UCameraComponent>(TEXT("FollowCamera"));
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
-	FollowCamera->bUsePawnControlRotation = false; // Camera does not rotate relative to arm
+	FollowCamera->bUsePawnControlRotation = false;
 
 	bAutoCamera = true;
 	RestingOffset = FRotator(-15.f, 0.f, 0.f);
@@ -23,14 +22,12 @@ UCharacterCamera::UCharacterCamera()
 	PrimaryComponentTick.TickGroup = TG_PostPhysics;
 }
 
-void UCharacterCamera::SetupAttachment(USceneComponent* InParent, FName InSocketName)
+void UCharacterCamera::SetupAttachment(USceneComponent* InParent, const FName InSocketName) const
 {
 	CameraBoom->SetupAttachment(InParent, InSocketName);
 	FollowCamera->SetupAttachment(CameraBoom, USpringArmComponent::SocketName);
 }
 
-
-// Called when the game starts
 void UCharacterCamera::BeginPlay()
 {
 	Super::BeginPlay();
@@ -38,8 +35,6 @@ void UCharacterCamera::BeginPlay()
 	IdleTimer = IdleTime;	
 }
 
-
-// Called every frame
 void UCharacterCamera::TickComponent(float DeltaTime, ELevelTick TickType, FActorComponentTickFunction* ThisTickFunction)
 {
 	Super::TickComponent(DeltaTime, TickType, ThisTickFunction);
@@ -64,7 +59,7 @@ void UCharacterCamera::TickComponent(float DeltaTime, ELevelTick TickType, FActo
 	}
 }
 
-void UCharacterCamera::AddLookInput(float Pitch, float Yaw)
+void UCharacterCamera::AddLookInput(const float Pitch, const float Yaw)
 {
 	if(bAutoCamera) return;
 	
