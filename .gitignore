@@ -35,6 +35,9 @@ Desktop.ini
 # Visual Studio 2015 user specific files
 .vs/
 
+# Symbol files
+*.pdb
+
 # Compiled Object files
 *.slo
 *.lo
