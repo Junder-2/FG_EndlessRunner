@@ -8,6 +8,7 @@
 class UBoxComponent;
 class AFloorTile;
 class ARunnerCharacter;
+class URunnerSaveGame;
 
 UCLASS()
 class FG_ENDLESSRUNNER_API ALevelManager : public AActor
@@ -92,7 +93,7 @@ protected:
 	void SaveHighScore();
 
 	UPROPERTY()
-	class URunnerSaveGame* SaveGame;
+	TObjectPtr<URunnerSaveGame> SaveGame;
 
 protected:
 	virtual void BeginPlay() override;

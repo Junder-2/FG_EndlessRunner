@@ -204,7 +204,6 @@ bool ARunnerCharacter::Damage(int Amount, const AActor* SourceActor)
 	if(HitPoints <= 0)
 	{
 		OnDeathEvent.Broadcast();
-		//UE_LOG(LogTemp, Warning, TEXT("Death"));
 	}
 
 	return true;
