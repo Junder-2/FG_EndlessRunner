@@ -72,10 +72,10 @@ void ALevelManager::Tick(float DeltaSeconds)
 	{
 		if(CurrentFloorTiles.First()->GetActorLocation().X < -5000.f)
 		{
-			TArray<AActor*> temp;
-			CurrentFloorTiles.First()->GetAttachedActors(temp);
+			TArray<AActor*> Temp;
+			CurrentFloorTiles.First()->GetAttachedActors(Temp);
 			
-			for (AActor* CActor : temp)
+			for (AActor* CActor : Temp)
 			{
 				CActor->Destroy();
 			}
