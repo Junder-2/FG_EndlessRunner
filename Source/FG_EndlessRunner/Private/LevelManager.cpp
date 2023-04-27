@@ -15,11 +15,17 @@ ALevelManager::ALevelManager()
 
 void ALevelManager::BeginPlay()
 {
-	Super::BeginPlay();	
+	Super::BeginPlay();
 
-	RunnerCharacter = Cast<ARunnerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), 0));
-	RunnerCharacter->OnDamageEvent.AddUObject(this, &ALevelManager::OnDamage);
-	RunnerCharacter->OnDeathEvent.AddUObject(this, &ALevelManager::OnDeath);
+	PlayerCount = UGameplayStatics::GetNumPlayerControllers(GetWorld());
+
+	for (int i = 0; i < FMath::Min(PlayerCount-1, PlayerCharacters.Num()); i++)
+	{
+		PlayerCharacters[i] = Cast<ARunnerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), i+1));
+		PlayerCharacters[i]->OnDamageEvent.AddUObject(this, &ALevelManager::OnDamage, i);
+		PlayerCharacters[i]->OnDeathEvent.AddUObject(this, &ALevelManager::OnDeath, i);
+		UE_LOG(LogTemp, Warning, TEXT("Found Player %i"), i);
+	}	
 
 	CurrentGameSpeed = 1.f;
 	ObstacleDifficulty = BaseObstacleAmount;
@@ -63,10 +69,13 @@ void ALevelManager::Tick(float DeltaSeconds)
 		CurrentHighScore = RawScore;
 	}
 
-	if(RunnerCharacter != nullptr)
+	for (TObjectPtr<ARunnerCharacter> Player : PlayerCharacters)
 	{
-		RunnerCharacter->SetMoveSpeed(GetMoveSpeed());
-	}
+		if(Player != nullptr)
+		{
+			Player->SetMoveSpeed(GetMoveSpeed());
+		}
+	}	
 
 	if(!CurrentFloorTiles.IsEmpty())
 	{
@@ -106,14 +115,14 @@ void ALevelManager::SpawnRandomFloorTile()
 	CurrentFloorTiles.PushLast(GetWorld()->SpawnActor<AFloorTile>(NewFloorTile->GetClass(), Position, FRotator::ZeroRotator, SpawnInfo));
 }
 
-void ALevelManager::OnDamage()
+void ALevelManager::OnDamage(int PlayerIndex)
 {
 	CurrentAcceleration = -.5;
 }
 
-ARunnerCharacter* ALevelManager::GetRunnerCharacter() const
+ARunnerCharacter* ALevelManager::GetRunnerCharacter(int PlayerIndex) const
 {
-	return RunnerCharacter;
+	return PlayerCharacters[PlayerIndex];
 }
 
 float ALevelManager::GetRandomLanePos() const

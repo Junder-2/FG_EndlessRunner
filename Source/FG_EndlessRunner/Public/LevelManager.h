@@ -19,7 +19,7 @@ public:
 	ALevelManager();
 
 private:
-	TObjectPtr<ARunnerCharacter> RunnerCharacter; 
+	TStaticArray<TObjectPtr<ARunnerCharacter>, 2> PlayerCharacters; 
 
 public:
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Game Variables")
@@ -50,13 +50,16 @@ public:
 	TArray<TSubclassOf<AFloorTile>> FloorTilesPrefabs;
 
 public:
+	UPROPERTY(Transient)
+	int PlayerCount;
+	
 	UPROPERTY(Transient, BlueprintReadWrite, VisibleAnywhere, Category="Game Properties")
 	float CurrentGameSpeed;
 
 	UPROPERTY(Transient, BlueprintReadWrite, VisibleAnywhere, Category="Game Properties")
 	float ObstacleDifficulty;
 	
-	ARunnerCharacter* GetRunnerCharacter() const;
+	ARunnerCharacter* GetRunnerCharacter(int PlayerIndex) const;
 	float GetRandomLanePos() const;
 	float GetLanePos(int Lane) const;
 	int GetLane(FVector Location) const;
@@ -80,14 +83,13 @@ protected:
 	UPROPERTY(Transient)
 	int CurrentHighScore;
 
-	void OnDamage();
+	void OnDamage(int PlayerIndex);
+	UFUNCTION(BlueprintImplementableEvent)
+	void OnDeath(int PlayerIndex);
 	
 	TDeque<AFloorTile*> CurrentFloorTiles;
 	
 	void SpawnRandomFloorTile();
-
-	UFUNCTION(BlueprintImplementableEvent)
-	void OnDeath();
 
 	UFUNCTION(BlueprintCallable)
 	void SaveHighScore();

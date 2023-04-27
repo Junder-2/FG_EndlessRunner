@@ -1,14 +1,15 @@
 #pragma once
 
 #include "CoreMinimal.h"
-#include "InputAction.h"
-#include "InputMappingContext.h"
 #include "GameFramework/Character.h"
 #include "RunnerCharacter.generated.h"
 
 DECLARE_EVENT(ARunnerCharacter, FRunnerDamage)
 DECLARE_EVENT(ARunnerCharacter, FRunnerDeath)
 
+struct FInputActionValue;
+class UInputAction;
+class UInputMappingContext;
 class UCharacterCamera;
 class ALevelManager;
 
@@ -70,10 +71,11 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-	void Move(const FInputActionValue& Value);
+	UFUNCTION()
+	void Move(float Input);
 	TQueue<int> MoveInputQueue;
-
-	void Jump(const FInputActionValue& Value);
+	UFUNCTION()
+	void JumpInput();
 	
 	void Look(const FInputActionValue& Value);
 
@@ -113,7 +115,5 @@ protected:
 public:	
 	virtual void Tick(float DeltaTime) override;
 	
-	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
 	virtual void Landed(const FHitResult& Hit) override;
 };

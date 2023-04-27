@@ -1,9 +1,9 @@
 #include "RunnerCharacter.h"
 
 #include "CharacterCamera.h"
-#include "EnhancedInputSubsystems.h"
 #include "EnhancedInputComponent.h"
 #include "LevelManager.h"
+#include "PlayerInputController.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -45,25 +45,23 @@ void ARunnerCharacter::BeginPlay()
 	HitPoints = MaxHitPoints;
 	InvincibleTimer = 0;
 
-	if (const APlayerController* PlayerController = Cast<APlayerController>(Controller))
+	if(APlayerInputController* MainController = Cast<APlayerInputController>(GetWorld()->GetFirstPlayerController()))
 	{
-		if (UEnhancedInputLocalPlayerSubsystem* Subsystem = ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+		if (const APlayerController* PlayerController = Cast<APlayerController>(Controller))
 		{
-			Subsystem->AddMappingContext(DefaultMappingContext, 0);
+			switch (PlayerController->GetLocalPlayer()->GetControllerId())
+			{
+				case 1:
+					MainController->P1MoveEvent.AddUObject(this, &ARunnerCharacter::Move);
+					MainController->P1JumpEvent.AddUObject(this, &ARunnerCharacter::JumpInput);
+				break;
+
+				case 2:
+					MainController->P2MoveEvent.AddUObject(this, &ARunnerCharacter::Move);
+				MainController->P2JumpEvent.AddUObject(this, &ARunnerCharacter::JumpInput);
+				break;
+			}
 		}
-	}
-}
-
-void ARunnerCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
-{
-	Super::SetupPlayerInputComponent(PlayerInputComponent);
-
-	if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
-	{		
-		EnhancedInputComponent->BindAction(MoveAction, ETriggerEvent::Started, this, &ARunnerCharacter::Move);
-		EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ARunnerCharacter::Jump);
-
-		EnhancedInputComponent->BindAction(LookAction, ETriggerEvent::Triggered, this, &ARunnerCharacter::Look);
 	}
 }
 
@@ -87,12 +85,10 @@ void ARunnerCharacter::MoveLane(float DeltaTime)
 
 	FVector Pos = GetActorLocation();
 
-	Pos.Y = FMath::Lerp(StartLaneY, TargetLaneY, MoveLaneTimer);
-	
-	SetActorLocation(Pos);
-
 	if(MoveLaneTimer >= 1.f)
 	{
+		Pos.Y = TargetLaneY;
+		
 		BMovingLane = false;
 		CurrentLane = TargetLane;
 
@@ -101,14 +97,18 @@ void ARunnerCharacter::MoveLane(float DeltaTime)
 			SwitchLane(Value);
 		}
 	}
+	else Pos.Y = FMath::Lerp(StartLaneY, TargetLaneY, MoveLaneTimer);
+	
+	SetActorLocation(Pos);
+
 }
 
-void ARunnerCharacter::Move(const FInputActionValue& Value)
+void ARunnerCharacter::Move(const float Input)
 {
 	if(BMovingLane)
-		MoveInputQueue.Enqueue(Value.Get<float>());
+		MoveInputQueue.Enqueue(Input);
 	else
-		SwitchLane(Value.Get<float>());
+		SwitchLane(Input);
 }
 
 void ARunnerCharacter::Look(const FInputActionValue& Value)
@@ -121,7 +121,7 @@ void ARunnerCharacter::Look(const FInputActionValue& Value)
 	}
 }
 
-void ARunnerCharacter::Jump(const FInputActionValue& Value)
+void ARunnerCharacter::JumpInput()
 {
 	BIsJumping = true;
 	Super::Jump();
