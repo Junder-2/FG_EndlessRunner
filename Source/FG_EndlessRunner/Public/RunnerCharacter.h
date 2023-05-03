@@ -64,9 +64,7 @@ protected:
 	bool BIsJumping;
 
 	void MoveLane(float DeltaTime);
-
 	void SwitchLane(int Direction);
-
 	void SwitchRandomLane();
 	
 	TObjectPtr<AEndlessRunnerGameState> GameState;
@@ -85,6 +83,8 @@ protected:
 	int CurrentLane;
 	UPROPERTY(Transient)
 	int TargetLane;
+
+	FVector PositionOffset;
 
 	UPROPERTY(Transient)
 	float StartLaneY;

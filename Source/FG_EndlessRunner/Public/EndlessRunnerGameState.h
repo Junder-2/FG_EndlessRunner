@@ -69,6 +69,8 @@ public:
 
 	UFUNCTION(BlueprintCallable)
 	int GetHighScore() const;
+
+	bool IsTwoPlayerGame() const;
 	
 protected:
 	UPROPERTY(Transient)

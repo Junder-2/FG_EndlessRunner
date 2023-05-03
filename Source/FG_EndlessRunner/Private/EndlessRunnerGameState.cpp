@@ -1,5 +1,6 @@
 #include "EndlessRunnerGameState.h"
 
+#include "EndlessRunnerGameInstance.h"
 #include "FloorTile.h"
 #include "RunnerCharacter.h"
 #include "Kismet/GameplayStatics.h"
@@ -140,6 +141,16 @@ int AEndlessRunnerGameState::GetCurrentScore() const
 int AEndlessRunnerGameState::GetHighScore() const
 {
 	return CurrentHighScore;	
+}
+
+bool AEndlessRunnerGameState::IsTwoPlayerGame() const
+{
+	if(const UEndlessRunnerGameInstance* GameInstance = Cast<UEndlessRunnerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	{
+		return GameInstance->bTwoPlayerGame;
+	}
+
+	return false;
 }
 
 void AEndlessRunnerGameState::SaveHighScore()

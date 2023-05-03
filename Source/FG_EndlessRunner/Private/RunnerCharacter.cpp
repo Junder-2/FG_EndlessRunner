@@ -23,23 +23,6 @@ void ARunnerCharacter::BeginPlay()
 	
 	GameState = Cast<AEndlessRunnerGameState>(UGameplayStatics::GetGameState(GetWorld()));
 
-	if(GameState != nullptr)
-	{
-		CurrentLane = FMath::CeilToInt((GameState->NumOfLanes-1)/2.f);
-
-		FVector StartPos = GetActorLocation();
-
-		StartPos.Y = GameState->GetLanePos(CurrentLane);
-		
-		SetActorLocation(StartPos);
-	}
-
-	BMovingLane = false;
-	BIsJumping = false;
-	TargetLane = CurrentLane;
-	HitPoints = MaxHitPoints;
-	InvincibleTimer = 0;
-
 	if(APlayerInputController* MainController = Cast<APlayerInputController>(GetWorld()->GetFirstPlayerController()))
 	{
 		if (const APlayerController* PlayerController = Cast<APlayerController>(Controller))
@@ -49,15 +32,40 @@ void ARunnerCharacter::BeginPlay()
 				case 1:
 					MainController->P1MoveEvent.AddUObject(this, &ARunnerCharacter::Move);
 					MainController->P1JumpEvent.AddUObject(this, &ARunnerCharacter::JumpInput);
+
+					if(GameState->IsTwoPlayerGame())
+					{
+						PositionOffset.X = 10;
+					}
 				break;
 
 				case 2:
 					MainController->P2MoveEvent.AddUObject(this, &ARunnerCharacter::Move);
-				MainController->P2JumpEvent.AddUObject(this, &ARunnerCharacter::JumpInput);
+					MainController->P2JumpEvent.AddUObject(this, &ARunnerCharacter::JumpInput);
+
+					PositionOffset.X = -60;
 				break;
 			}
 		}
 	}
+
+	if(GameState != nullptr)
+	{
+		CurrentLane = FMath::CeilToInt((GameState->NumOfLanes-1)/2.f);
+
+		FVector StartPos = GetActorLocation();
+
+		StartPos.Y = GameState->GetLanePos(CurrentLane);
+		
+		SetActorLocation(StartPos+PositionOffset);
+	}
+	
+	BMovingLane = false;
+	BIsJumping = false;
+	TargetLane = CurrentLane;
+	HitPoints = MaxHitPoints;
+	InvincibleTimer = 0;
+	PositionOffset = FVector::ZeroVector;
 }
 
 void ARunnerCharacter::Tick(float DeltaTime)

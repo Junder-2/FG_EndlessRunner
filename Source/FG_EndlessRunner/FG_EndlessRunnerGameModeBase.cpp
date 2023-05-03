@@ -1,5 +1,6 @@
 #include "FG_EndlessRunnerGameModeBase.h"
 
+#include "EndlessRunnerGameInstance.h"
 #include "RunnerCharacter.h"
 #include "GameFramework/PlayerState.h"
 #include "Kismet/GameplayStatics.h"
@@ -23,6 +24,12 @@ void AFG_EndlessRunnerGameModeBase::StartPlay()
 {
 	PlayerControllerClass = APlayerController::StaticClass();
 	UGameplayStatics::CreatePlayer(GetWorld(), 1, true);
-	UGameplayStatics::CreatePlayer(GetWorld(), 2, true);
+
+	if(const UEndlessRunnerGameInstance* GameInstance = Cast<UEndlessRunnerGameInstance>(UGameplayStatics::GetGameInstance(GetWorld())))
+	{
+		if(GameInstance->bTwoPlayerGame)
+			UGameplayStatics::CreatePlayer(GetWorld(), 2, true);
+	}
+	
 	Super::StartPlay();
 }
