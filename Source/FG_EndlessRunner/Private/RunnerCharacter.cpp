@@ -1,8 +1,6 @@
 #include "RunnerCharacter.h"
 
-#include "CharacterCamera.h"
-#include "EnhancedInputComponent.h"
-#include "LevelManager.h"
+#include "EndlessRunnerGameState.h"
 #include "PlayerInputController.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
@@ -17,24 +15,21 @@ ARunnerCharacter::ARunnerCharacter()
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
-
-	CharacterCamera = CreateDefaultSubobject<UCharacterCamera>(TEXT("OrbitCamera"));
-	CharacterCamera->SetupAttachment(RootComponent);
 }
 
 void ARunnerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+	
+	GameState = Cast<AEndlessRunnerGameState>(UGameplayStatics::GetGameState(GetWorld()));
 
-	LevelManager = ALevelManager::GetLevelManager(GetWorld());
-
-	if(LevelManager != nullptr)
+	if(GameState != nullptr)
 	{
-		CurrentLane = FMath::CeilToInt((LevelManager->NumOfLanes-1)/2.f);
+		CurrentLane = FMath::CeilToInt((GameState->NumOfLanes-1)/2.f);
 
 		FVector StartPos = GetActorLocation();
 
-		StartPos.Y = LevelManager->GetLanePos(CurrentLane);
+		StartPos.Y = GameState->GetLanePos(CurrentLane);
 		
 		SetActorLocation(StartPos);
 	}
@@ -111,16 +106,6 @@ void ARunnerCharacter::Move(const float Input)
 		SwitchLane(Input);
 }
 
-void ARunnerCharacter::Look(const FInputActionValue& Value)
-{
-	const FVector2D LookAxisVector = Value.Get<FVector2D>();
-
-	if (CharacterCamera != nullptr)
-	{
-		CharacterCamera->AddLookInput(LookAxisVector.Y, LookAxisVector.X);
-	}
-}
-
 void ARunnerCharacter::JumpInput()
 {
 	BIsJumping = true;
@@ -137,14 +122,14 @@ void ARunnerCharacter::Landed(const FHitResult& Hit)
 void ARunnerCharacter::SwitchLane(const int Direction)
 {
 	const bool Increment = Direction > 0;
-	const int NumOfLanes = LevelManager->NumOfLanes-1;
+	const int NumOfLanes = GameState->NumOfLanes-1;
 	
 	if((CurrentLane <= 0 && !Increment) || (CurrentLane >= NumOfLanes && Increment) && Direction != 0) return;
 	
 	TargetLane = Increment ? TargetLane+1 : TargetLane-1;
 	
-	StartLaneY = LevelManager->GetLanePos(CurrentLane);
-	TargetLaneY = LevelManager->GetLanePos(TargetLane);
+	StartLaneY = GameState->GetLanePos(CurrentLane);
+	TargetLaneY = GameState->GetLanePos(TargetLane);
 
 	OnMoveLane(Increment);
 
@@ -154,7 +139,7 @@ void ARunnerCharacter::SwitchLane(const int Direction)
 
 void ARunnerCharacter::SwitchRandomLane()
 {
-	const int NumOfLanes = LevelManager->NumOfLanes-1;
+	const int NumOfLanes = GameState->NumOfLanes-1;
 
 	int Direction;
 	
@@ -176,7 +161,7 @@ bool ARunnerCharacter::Damage(int Amount, const AActor* SourceActor)
 	OnDamage(InvincibleTime);
 	OnDamageEvent.Broadcast();
 
-	const int DamageLane = LevelManager->GetLane(SourceActor->GetActorLocation());
+	const int DamageLane = GameState->GetLane(SourceActor->GetActorLocation());
 
 	UE_LOG(LogTemp, Warning, TEXT("Lane: %i"), DamageLane);
 	
@@ -188,8 +173,8 @@ bool ARunnerCharacter::Damage(int Amount, const AActor* SourceActor)
 		CurrentLane = TargetLane;
 		TargetLane = LastLane;
 
-		StartLaneY = LevelManager->GetLanePos(CurrentLane);
-		TargetLaneY = LevelManager->GetLanePos(TargetLane);
+		StartLaneY = GameState->GetLanePos(CurrentLane);
+		TargetLaneY = GameState->GetLanePos(TargetLane);
 
 		MoveInputQueue.Empty();
 		OnMoveLane(CurrentLane < TargetLane);

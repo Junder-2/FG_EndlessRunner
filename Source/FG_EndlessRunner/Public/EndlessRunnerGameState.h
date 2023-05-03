@@ -1,22 +1,21 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "SaveGameInterface.h"
 #include "Containers/Deque.h"
-#include "GameFramework/Actor.h"
-#include "LevelManager.generated.h"
+#include "GameFramework/GameStateBase.h"
+#include "EndlessRunnerGameState.generated.h"
 
-class UBoxComponent;
 class AFloorTile;
 class ARunnerCharacter;
-class URunnerSaveGame;
 
 UCLASS()
-class FG_ENDLESSRUNNER_API ALevelManager : public AActor
+class FG_ENDLESSRUNNER_API AEndlessRunnerGameState : public AGameStateBase, public ISaveGameInterface
 {
 	GENERATED_BODY()
-	
-public:	
-	ALevelManager();
+
+public:
+	AEndlessRunnerGameState();
 
 private:
 	TStaticArray<TObjectPtr<ARunnerCharacter>, 2> PlayerCharacters; 
@@ -71,8 +70,6 @@ public:
 	UFUNCTION(BlueprintCallable)
 	int GetHighScore() const;
 	
-	static ALevelManager* GetLevelManager(const UObject* WorldContextObject);
-
 protected:
 	UPROPERTY(Transient)
 	float CurrentAcceleration;
@@ -83,6 +80,9 @@ protected:
 	UPROPERTY(Transient)
 	int CurrentHighScore;
 
+	UFUNCTION(BlueprintCallable)
+	void SaveHighScore();
+
 	void OnDamage(int PlayerIndex);
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnDeath(int PlayerIndex);
@@ -91,13 +91,8 @@ protected:
 	
 	void SpawnRandomFloorTile();
 
-	UFUNCTION(BlueprintCallable)
-	void SaveHighScore();
-
-	UPROPERTY()
-	TObjectPtr<URunnerSaveGame> SaveGame;
-
 protected:
 	virtual void BeginPlay() override;
 	virtual void Tick(float DeltaSeconds) override;
+	
 };

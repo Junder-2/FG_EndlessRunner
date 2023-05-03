@@ -1,8 +1,9 @@
 #include "FloorTile.h"
 
-#include "LevelManager.h"
+#include "EndlessRunnerGameState.h"
 #include "StaticObstacle.h"
 #include "Components/BoxComponent.h"
+#include "Kismet/GameplayStatics.h"
 
 AFloorTile::AFloorTile()
 {
@@ -19,15 +20,15 @@ void AFloorTile::BeginPlay()
 {
 	Super::BeginPlay();
 	
-	LevelManager = ALevelManager::GetLevelManager(GetWorld());
+	GameState = Cast<AEndlessRunnerGameState>(UGameplayStatics::GetGameState(GetWorld()));
 
 	GenerateObstacles();
 }
 
 void AFloorTile::GenerateObstacles()
 {
-	const int NumOfLanes = LevelManager->NumOfLanes;
-	const float ObstacleDifficulty = LevelManager->ObstacleDifficulty;
+	const int NumOfLanes = GameState->NumOfLanes;
+	const float ObstacleDifficulty = GameState->ObstacleDifficulty;
 	
 	GeneratedObstacles.Init(EObstacleType::None, ObstacleRowAmount*NumOfLanes);
 
@@ -60,7 +61,7 @@ void AFloorTile::GenerateObstacles()
 
 bool AFloorTile::CanSpawnObstacle(const int X, const int Y, const EObstacleType ObstacleType)
 {
-	const int NumOfLanes = LevelManager->NumOfLanes;
+	const int NumOfLanes = GameState->NumOfLanes;
 	
 	if(GeneratedObstacles[X + Y*NumOfLanes] != EObstacleType::None) return false;
 
@@ -104,7 +105,7 @@ bool AFloorTile::CanSpawnObstacle(const int X, const int Y, const EObstacleType 
 
 EObstacleType AFloorTile::CheckObstacleExists(const int X, const int Y)
 {
-	const int NumOfLanes = LevelManager->NumOfLanes;
+	const int NumOfLanes = GameState->NumOfLanes;
 	
 	if(X < 0 || X > NumOfLanes-1) return EObstacleType::Invalid;
 	if(Y < 0 || Y > ObstacleRowAmount-1) return EObstacleType::Invalid;
@@ -114,7 +115,7 @@ EObstacleType AFloorTile::CheckObstacleExists(const int X, const int Y)
 
 int AFloorTile::CheckObstacleLane(const int Y, int& OpenSpot)
 {
-	const int NumOfLanes = LevelManager->NumOfLanes;
+	const int NumOfLanes = GameState->NumOfLanes;
 
 	int NumberOfBlocking = 0;
 
@@ -129,7 +130,7 @@ int AFloorTile::CheckObstacleLane(const int Y, int& OpenSpot)
 
 int AFloorTile::GetObstacleLaneOpening(const int Y)
 {
-	const int NumOfLanes = LevelManager->NumOfLanes;
+	const int NumOfLanes = GameState->NumOfLanes;
 
 	int NumberOfBlocking = 0;
 
@@ -155,7 +156,7 @@ void AFloorTile::SpawnObstacle(const int Lane, const float NormalizedRow, const 
 	const float StartOffset = GetExtent()/ObstacleRowAmount;
 	FVector Position;
 	Position.X = FMath::Lerp(GetTileStart().X+StartOffset, GetTileEnd().X, NormalizedRow);
-	Position.Y = LevelManager->GetLanePos(Lane);
+	Position.Y = GameState->GetLanePos(Lane);
 	Position.Z = NewObstacle->GetUpwardsOffset().Z;
 	
 	FActorSpawnParameters SpawnInfo;
@@ -169,7 +170,7 @@ void AFloorTile::Tick(float DeltaTime)
 {
 	Super::Tick(DeltaTime);
 	
-	AddActorWorldOffset(GetActorForwardVector()*(-LevelManager->GetMoveSpeed()*DeltaTime));
+	AddActorWorldOffset(GetActorForwardVector()*(-GameState->GetMoveSpeed()*DeltaTime));
 }
 
 float AFloorTile::GetExtent() const

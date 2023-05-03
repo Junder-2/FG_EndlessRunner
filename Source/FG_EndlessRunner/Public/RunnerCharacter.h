@@ -4,34 +4,17 @@
 #include "GameFramework/Character.h"
 #include "RunnerCharacter.generated.h"
 
+class AEndlessRunnerGameState;
 DECLARE_EVENT(ARunnerCharacter, FRunnerDamage)
+
 DECLARE_EVENT(ARunnerCharacter, FRunnerDeath)
 
-struct FInputActionValue;
-class UInputAction;
-class UInputMappingContext;
 class UCharacterCamera;
-class ALevelManager;
 
 UCLASS()
 class FG_ENDLESSRUNNER_API ARunnerCharacter : public ACharacter
 {
 	GENERATED_BODY()
-
-	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UCharacterCamera> CharacterCamera;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputMappingContext> DefaultMappingContext;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> JumpAction;
-	
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> MoveAction;
-
-	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category = Input, meta = (AllowPrivateAccess = "true"))
-	TObjectPtr<UInputAction> LookAction;
 
 public:
 	ARunnerCharacter();
@@ -76,8 +59,6 @@ protected:
 	TQueue<int> MoveInputQueue;
 	UFUNCTION()
 	void JumpInput();
-	
-	void Look(const FInputActionValue& Value);
 
 	UPROPERTY(Transient)
 	bool BIsJumping;
@@ -87,8 +68,8 @@ protected:
 	void SwitchLane(int Direction);
 
 	void SwitchRandomLane();
-
-	TObjectPtr<ALevelManager> LevelManager;
+	
+	TObjectPtr<AEndlessRunnerGameState> GameState;
 
 	UPROPERTY(Transient)
 	float InvincibleTimer;

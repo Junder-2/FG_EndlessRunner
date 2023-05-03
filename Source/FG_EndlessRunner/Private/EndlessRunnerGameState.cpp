@@ -1,19 +1,16 @@
-#include "LevelManager.h"
+#include "EndlessRunnerGameState.h"
 
 #include "FloorTile.h"
 #include "RunnerCharacter.h"
-#include "RunnerSaveGame.h"
 #include "Kismet/GameplayStatics.h"
 #include "Kismet/KismetMathLibrary.h"
 
-#define SLOT_NAME "SaveSlot"
-
-ALevelManager::ALevelManager()
+AEndlessRunnerGameState::AEndlessRunnerGameState()
 {
 	PrimaryActorTick.bCanEverTick = true;
 }
 
-void ALevelManager::BeginPlay()
+void AEndlessRunnerGameState::BeginPlay()
 {
 	Super::BeginPlay();
 
@@ -22,25 +19,15 @@ void ALevelManager::BeginPlay()
 	for (int i = 0; i < FMath::Min(PlayerCount-1, PlayerCharacters.Num()); i++)
 	{
 		PlayerCharacters[i] = Cast<ARunnerCharacter>(UGameplayStatics::GetPlayerCharacter(GetWorld(), i+1));
-		PlayerCharacters[i]->OnDamageEvent.AddUObject(this, &ALevelManager::OnDamage, i);
-		PlayerCharacters[i]->OnDeathEvent.AddUObject(this, &ALevelManager::OnDeath, i);
+		PlayerCharacters[i]->OnDamageEvent.AddUObject(this, &AEndlessRunnerGameState::OnDamage, i);
+		PlayerCharacters[i]->OnDeathEvent.AddUObject(this, &AEndlessRunnerGameState::OnDeath, i);
 		UE_LOG(LogTemp, Warning, TEXT("Found Player %i"), i);
-	}	
+	}
+
+	CurrentHighScore = LoadHighScore();
 
 	CurrentGameSpeed = 1.f;
 	ObstacleDifficulty = BaseObstacleAmount;
-
-	if(UGameplayStatics::DoesSaveGameExist(SLOT_NAME, 0))
-	{
-		SaveGame = Cast<URunnerSaveGame>(UGameplayStatics::LoadGameFromSlot(SLOT_NAME, 0));
-		CurrentHighScore = SaveGame->HighScore;
-	}
-	else
-	{
-		UE_LOG(LogTemp, Warning, TEXT("No Save"));
-		SaveGame = Cast<URunnerSaveGame>(UGameplayStatics::CreateSaveGameObject(URunnerSaveGame::StaticClass()));
-		CurrentHighScore = 0;
-	}
 
 	for (int i = 0; i < 10; i++)
 	{
@@ -48,7 +35,7 @@ void ALevelManager::BeginPlay()
 	}
 }
 
-void ALevelManager::Tick(float DeltaSeconds)
+void AEndlessRunnerGameState::Tick(float DeltaSeconds)
 {
 	Super::Tick(DeltaSeconds);
 
@@ -96,7 +83,7 @@ void ALevelManager::Tick(float DeltaSeconds)
 	}
 }
 
-void ALevelManager::SpawnRandomFloorTile()
+void AEndlessRunnerGameState::SpawnRandomFloorTile()
 {
 	if(FloorTilesPrefabs.IsEmpty()) return;
 
@@ -115,58 +102,47 @@ void ALevelManager::SpawnRandomFloorTile()
 	CurrentFloorTiles.PushLast(GetWorld()->SpawnActor<AFloorTile>(NewFloorTile->GetClass(), Position, FRotator::ZeroRotator, SpawnInfo));
 }
 
-void ALevelManager::OnDamage(int PlayerIndex)
+void AEndlessRunnerGameState::OnDamage(int PlayerIndex)
 {
 	CurrentAcceleration = -.5;
 }
 
-ARunnerCharacter* ALevelManager::GetRunnerCharacter(int PlayerIndex) const
+ARunnerCharacter* AEndlessRunnerGameState::GetRunnerCharacter(const int PlayerIndex) const
 {
 	return PlayerCharacters[PlayerIndex];
 }
 
-float ALevelManager::GetRandomLanePos() const
+float AEndlessRunnerGameState::GetRandomLanePos() const
 {
 	return GetLanePos(FMath::RandRange(0, NumOfLanes-1));
 }
 
-float ALevelManager::GetLanePos(const int Lane) const
+float AEndlessRunnerGameState::GetLanePos(const int Lane) const
 {
 	return FMath::Lerp(-TotalWidth*.5f, TotalWidth*.5f, (float)Lane/(NumOfLanes-1));
 }
 
-int ALevelManager::GetLane(const FVector Location) const
+int AEndlessRunnerGameState::GetLane(const FVector Location) const
 {
 	return UKismetMathLibrary::NormalizeToRange(Location.Y, -TotalWidth*.5f, TotalWidth*.5f) * (NumOfLanes-1);
 }
 
-float ALevelManager::GetMoveSpeed() const
+float AEndlessRunnerGameState::GetMoveSpeed() const
 {
 	return BaseMoveSpeed + CurrentGameSpeed*AddedSpeedPerSecond;
 }
 
-int ALevelManager::GetCurrentScore() const
+int AEndlessRunnerGameState::GetCurrentScore() const
 {
 	return RawScore;
 }
 
-int ALevelManager::GetHighScore() const
+int AEndlessRunnerGameState::GetHighScore() const
 {
 	return CurrentHighScore;	
 }
 
-void ALevelManager::SaveHighScore()
+void AEndlessRunnerGameState::SaveHighScore()
 {
-	if(!SaveGame)
-	{
-		SaveGame = Cast<URunnerSaveGame>(UGameplayStatics::CreateSaveGameObject(URunnerSaveGame::StaticClass()));
-	}
-
-	SaveGame->HighScore = CurrentHighScore;
-	UGameplayStatics::SaveGameToSlot(SaveGame, SLOT_NAME, 0);
-}
-
-ALevelManager* ALevelManager::GetLevelManager(const UObject* WorldContextObject)
-{
-	return Cast<ALevelManager>(UGameplayStatics::GetActorOfClass(WorldContextObject, StaticClass()));
+	SaveNewHighScore(CurrentHighScore);
 }

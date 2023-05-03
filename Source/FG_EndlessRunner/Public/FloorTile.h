@@ -5,8 +5,8 @@
 #include "FloorTile.generated.h"
 
 class AStaticObstacle;
+class AEndlessRunnerGameState;
 class UBoxComponent;
-class ALevelManager;
 
 UENUM(BlueprintType)
 enum class EObstacleType : uint8
@@ -31,8 +31,8 @@ public:
 
 protected:
 	virtual void BeginPlay() override;
-
-	TObjectPtr<ALevelManager> LevelManager;
+	
+	TObjectPtr<AEndlessRunnerGameState> GameState;
 
 	UPROPERTY(EditAnywhere, Category="Tile Variables")
 	int ObstacleRowAmount = 8;

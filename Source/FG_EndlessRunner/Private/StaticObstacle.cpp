@@ -34,4 +34,3 @@ void AStaticObstacle::NotifyActorBeginOverlap(AActor* OtherActor)
 		}
 	}
 }
-

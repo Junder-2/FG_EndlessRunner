@@ -16,7 +16,7 @@ UClass* AFG_EndlessRunnerGameModeBase::GetDefaultPawnClassForController_Implemen
 		if(ControllerId == 3) return P2_Character;
 	}
 	
-	return nullptr;
+	return Super::GetDefaultPawnClassForController_Implementation(InController);
 }
 
 void AFG_EndlessRunnerGameModeBase::StartPlay()
@@ -26,4 +26,3 @@ void AFG_EndlessRunnerGameModeBase::StartPlay()
 	UGameplayStatics::CreatePlayer(GetWorld(), 2, true);
 	Super::StartPlay();
 }
-

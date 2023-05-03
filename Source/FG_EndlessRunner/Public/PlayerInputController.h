@@ -5,7 +5,6 @@
 #include "PlayerInputController.generated.h"
 
 DECLARE_EVENT_OneParam(APlayerInputController, FInputMove, float)
-
 DECLARE_EVENT(APlayerInputController, FInputJump)
 
 class UInputMappingContext;
@@ -47,6 +46,4 @@ protected:
 
 	virtual void SetupInputComponent() override;
 	virtual void BeginPlay() override;
-	virtual void SpawnPlayerCameraManager() override;
-	virtual ACameraActor* GetAutoActivateCameraForPlayer() const override;
 };

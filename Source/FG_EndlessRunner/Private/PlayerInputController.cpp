@@ -13,16 +13,6 @@ void APlayerInputController::BeginPlay()
 	}
 }
 
-void APlayerInputController::SpawnPlayerCameraManager()
-{
-	
-}
-
-ACameraActor* APlayerInputController::GetAutoActivateCameraForPlayer() const
-{
-	return nullptr;
-}
-
 void APlayerInputController::SetupInputComponent()
 {
 	Super::SetupInputComponent();
