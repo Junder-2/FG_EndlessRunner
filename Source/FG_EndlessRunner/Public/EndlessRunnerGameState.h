@@ -2,6 +2,7 @@
 
 #include "CoreMinimal.h"
 #include "SaveGameInterface.h"
+#include "Containers/CircularQueue.h"
 #include "Containers/Deque.h"
 #include "GameFramework/GameStateBase.h"
 #include "EndlessRunnerGameState.generated.h"
@@ -21,6 +22,9 @@ private:
 	TStaticArray<TObjectPtr<ARunnerCharacter>, 2> PlayerCharacters; 
 
 public:
+	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Game Variables")
+	int NumOfTiles = 8;
+	
 	UPROPERTY(BlueprintReadWrite, EditAnywhere, Category="Game Variables")
 	int NumOfLanes = 3;
 
@@ -44,6 +48,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Game Variables")
 	float PointsFromSpeed = .1f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Game Variables")
+	float DodgeDestructChance = .25f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, Category="Game Variables")
 	TArray<TSubclassOf<AFloorTile>> FloorTilesPrefabs;
@@ -71,6 +78,8 @@ public:
 	int GetHighScore() const;
 
 	bool IsTwoPlayerGame() const;
+
+	void DestructRandomObstacle();
 	
 protected:
 	UPROPERTY(Transient)
@@ -89,7 +98,7 @@ protected:
 	UFUNCTION(BlueprintImplementableEvent)
 	void OnDeath(int PlayerIndex);
 	
-	TDeque<AFloorTile*> CurrentFloorTiles;
+	TDeque<TObjectPtr<AFloorTile>> CurrentFloorTiles;
 	
 	void SpawnRandomFloorTile();
 

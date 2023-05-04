@@ -30,7 +30,7 @@ void AFloorTile::GenerateObstacles()
 	const int NumOfLanes = GameState->NumOfLanes;
 	const float ObstacleDifficulty = GameState->ObstacleDifficulty;
 	
-	GeneratedObstacles.Init(EObstacleType::None, ObstacleRowAmount*NumOfLanes);
+	SpawnedObstacleTypes.Init(EObstacleType::None, ObstacleRowAmount*NumOfLanes);
 
 	const int SpawnAmount = FMath::RandRange(ObstacleDifficulty-2, ObstacleDifficulty+2);
 
@@ -49,7 +49,7 @@ void AFloorTile::GenerateObstacles()
 			if(CanSpawnObstacle(X, Y, ObstacleType))
 			{
 				SpawnObstacle(X, (float)Y/(ObstacleRowAmount-1), ObstacleType);
-				GeneratedObstacles[X + Y*NumOfLanes] = ObstacleType;
+				SpawnedObstacleTypes[X + Y*NumOfLanes] = ObstacleType;
 				break;
 			}
 			
@@ -63,7 +63,7 @@ bool AFloorTile::CanSpawnObstacle(const int X, const int Y, const EObstacleType 
 {
 	const int NumOfLanes = GameState->NumOfLanes;
 	
-	if(GeneratedObstacles[X + Y*NumOfLanes] != EObstacleType::None) return false;
+	if(SpawnedObstacleTypes[X + Y*NumOfLanes] != EObstacleType::None) return false;
 
 	if(ObstacleType == EObstacleType::Tall)
 	{
@@ -110,7 +110,7 @@ EObstacleType AFloorTile::CheckObstacleExists(const int X, const int Y)
 	if(X < 0 || X > NumOfLanes-1) return EObstacleType::Invalid;
 	if(Y < 0 || Y > ObstacleRowAmount-1) return EObstacleType::Invalid;
 	
-	return GeneratedObstacles[X + Y*NumOfLanes];
+	return SpawnedObstacleTypes[X + Y*NumOfLanes];
 }
 
 int AFloorTile::CheckObstacleLane(const int Y, int& OpenSpot)
@@ -164,6 +164,7 @@ void AFloorTile::SpawnObstacle(const int Lane, const float NormalizedRow, const 
 
 	AStaticObstacle* SpawnedObstacle = GetWorld()->SpawnActor<AStaticObstacle>(NewObstacle->GetClass(), Position, FRotator::ZeroRotator, SpawnInfo);
 	SpawnedObstacle->AttachToActor(this, FAttachmentTransformRules::KeepWorldTransform);
+	SpawnedObstacles.Add(SpawnedObstacle);
 }
 
 void AFloorTile::Tick(float DeltaTime)
@@ -191,4 +192,14 @@ FVector AFloorTile::GetTileEnd() const
 FVector AFloorTile::GetPositionFromStart(const FVector Start) const
 {
 	return Start + GetExtent()*FVector::ForwardVector;
+}
+
+void AFloorTile::DestroyRandomObstacle()
+{
+	if(SpawnedObstacles.IsEmpty()) return;
+	const int RandIndex = FMath::RandHelper(SpawnedObstacles.Num()-1);
+	AStaticObstacle* RandObstacle = SpawnedObstacles[RandIndex];
+	SpawnedObstacles.RemoveAt(RandIndex);
+	RandObstacle->Destruct();
+	
 }

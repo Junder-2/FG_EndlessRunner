@@ -2,6 +2,8 @@
 
 #include "EndlessRunnerGameState.h"
 #include "PlayerInputController.h"
+#include "StaticObstacle.h"
+#include "Components/BoxComponent.h"
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
 #include "Kismet/GameplayStatics.h"
@@ -15,13 +17,26 @@ ARunnerCharacter::ARunnerCharacter()
 	bUseControllerRotationPitch = false;
 	bUseControllerRotationYaw = false;
 	bUseControllerRotationRoll = false;
+
+	StoredLocationCollision = CreateDefaultSubobject<UCapsuleComponent>(TEXT("AfterImageCollision"));
+	StoredLocationCollision->SetupAttachment(RootComponent);
+	StoredLocationCollision->SetUsingAbsoluteLocation(true);
+	StoredLocationCollision->InitCapsuleSize(42.f, 96.f);
+	StoredLocationCollision->SetCollisionProfileName(UCollisionProfile::BlockAll_ProfileName);
+	StoredLocationCollision->SetCollisionEnabled(ECollisionEnabled::QueryAndProbe);
+	StoredLocationCollision->SetGenerateOverlapEvents(true);
 }
 
 void ARunnerCharacter::BeginPlay()
 {
 	Super::BeginPlay();
+
+	StoredLocationCollision->SetCapsuleSize(GetCapsuleComponent()->GetUnscaledCapsuleRadius(), GetCapsuleComponent()->GetUnscaledCapsuleHalfHeight());
+	StoredLocationCollision->OnComponentBeginOverlap.AddDynamic(this, &ARunnerCharacter::OnStoredLocationOverlap);
 	
 	GameState = Cast<AEndlessRunnerGameState>(UGameplayStatics::GetGameState(GetWorld()));
+	
+	PositionOffset = FVector::ZeroVector;
 
 	if(APlayerInputController* MainController = Cast<APlayerInputController>(GetWorld()->GetFirstPlayerController()))
 	{
@@ -65,7 +80,6 @@ void ARunnerCharacter::BeginPlay()
 	TargetLane = CurrentLane;
 	HitPoints = MaxHitPoints;
 	InvincibleTimer = 0;
-	PositionOffset = FVector::ZeroVector;
 }
 
 void ARunnerCharacter::Tick(float DeltaTime)
@@ -80,6 +94,18 @@ void ARunnerCharacter::Tick(float DeltaTime)
 
 		if(InvincibleTimer < 0) InvincibleTimer = 0;
 	}
+
+	if(StoredLocationTimer != 0)
+	{
+		StoredLocationTimer -= DeltaTime;
+
+		if(StoredLocationTimer < 0)
+		{
+			StoredLocationCollision->SetWorldLocation(GetActorLocation());
+			StoredLocationTimer = 0;
+		}
+		
+	}	
 }
 
 void ARunnerCharacter::MoveLane(float DeltaTime)
@@ -94,6 +120,8 @@ void ARunnerCharacter::MoveLane(float DeltaTime)
 		
 		BMovingLane = false;
 		CurrentLane = TargetLane;
+
+		StoredLocationTimer = StoredLocationDelay;
 
 		if(int Value; !MoveInputQueue.IsEmpty() && MoveInputQueue.Dequeue(Value))
 		{
@@ -140,6 +168,9 @@ void ARunnerCharacter::SwitchLane(const int Direction)
 	TargetLaneY = GameState->GetLanePos(TargetLane);
 
 	OnMoveLane(Increment);
+
+	StoredLocationCollision->SetWorldLocation(GetActorLocation());
+	StoredLocationTimer = 0;
 
 	MoveLaneTimer = 0;
 	BMovingLane = true;
@@ -205,6 +236,17 @@ bool ARunnerCharacter::Damage(int Amount, const AActor* SourceActor)
 void ARunnerCharacter::SetMoveSpeed(const float Speed)
 {
 	CurrentMoveSpeed = Speed;
+}
+
+void ARunnerCharacter::OnStoredLocationOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor,
+	UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult)
+{
+	if(InvincibleTimer != 0) return;
+	if(AStaticObstacle* Obstacle = Cast<AStaticObstacle>(OtherActor))
+	{
+		UE_LOG(LogTemp, Warning, TEXT("DodgedObstacle"));
+		GameState->DestructRandomObstacle();
+	}
 }
 
 void ARunnerCharacter::OnDamage_Implementation(float InvincibleDuration)

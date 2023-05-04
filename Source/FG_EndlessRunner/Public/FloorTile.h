@@ -51,7 +51,8 @@ protected:
 
 	bool CanSpawnObstacle(int X, int Y, EObstacleType ObstacleType);
 
-	TArray<EObstacleType> GeneratedObstacles;
+	TArray<EObstacleType> SpawnedObstacleTypes;
+	TArray<TObjectPtr<AStaticObstacle>> SpawnedObstacles;
 
 public:	
 	virtual void Tick(float DeltaTime) override;
@@ -60,4 +61,6 @@ public:
 	FVector GetTileStart() const;
 	FVector GetTileEnd() const;
 	FVector GetPositionFromStart(FVector Start) const;
+
+	void DestroyRandomObstacle();
 };

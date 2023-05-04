@@ -22,10 +22,7 @@ int ISaveGameInterface::LoadHighScore()
 
 void ISaveGameInterface::SaveNewHighScore(const int NewHighScore)
 {
-	if(!SaveGame)
-	{
-		SaveGame = Cast<URunnerSaveGame>(UGameplayStatics::CreateSaveGameObject(URunnerSaveGame::StaticClass()));
-	}
+	SaveGame = Cast<URunnerSaveGame>(UGameplayStatics::CreateSaveGameObject(URunnerSaveGame::StaticClass()));
 
 	SaveGame->HighScore = NewHighScore;
 	UGameplayStatics::SaveGameToSlot(SaveGame, SLOT_NAME, 0);

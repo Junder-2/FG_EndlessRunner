@@ -19,6 +19,12 @@ public:
 	FVector GetUpwardsOffset() const;
 	float GetForwardOffset() const;
 
-protected:
-	virtual void NotifyActorBeginOverlap(AActor* OtherActor) override;	
+	void Destruct();
+
+protected:	
+	virtual void BeginPlay() override;
+	
+	UFUNCTION()
+	void OnCollisionOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
+
 };

@@ -30,7 +30,7 @@ void AEndlessRunnerGameState::BeginPlay()
 	CurrentGameSpeed = 1.f;
 	ObstacleDifficulty = BaseObstacleAmount;
 
-	for (int i = 0; i < 10; i++)
+	for (int i = 0; i < NumOfTiles; i++)
 	{
 		SpawnRandomFloorTile();
 	}
@@ -101,6 +101,13 @@ void AEndlessRunnerGameState::SpawnRandomFloorTile()
 	const FActorSpawnParameters SpawnInfo;
 
 	CurrentFloorTiles.PushLast(GetWorld()->SpawnActor<AFloorTile>(NewFloorTile->GetClass(), Position, FRotator::ZeroRotator, SpawnInfo));
+}
+
+void AEndlessRunnerGameState::DestructRandomObstacle()
+{
+	if(FMath::RandRange(0.f, 1.f) > DodgeDestructChance) return;
+	
+	CurrentFloorTiles[FMath::RandRange(NumOfTiles/3.f, NumOfTiles/1.5f)]->DestroyRandomObstacle();
 }
 
 void AEndlessRunnerGameState::OnDamage(int PlayerIndex)

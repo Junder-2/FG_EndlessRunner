@@ -13,5 +13,5 @@ public:
 	UEndlessRunnerGameInstance();
 
 	UPROPERTY(BlueprintReadWrite)
-	bool bTwoPlayerGame;	
+	bool bTwoPlayerGame;
 };

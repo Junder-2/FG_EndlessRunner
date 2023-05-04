@@ -1,20 +1,22 @@
 #pragma once
 
 #include "CoreMinimal.h"
+#include "Containers/CircularQueue.h"
 #include "GameFramework/Character.h"
 #include "RunnerCharacter.generated.h"
 
-class AEndlessRunnerGameState;
 DECLARE_EVENT(ARunnerCharacter, FRunnerDamage)
-
 DECLARE_EVENT(ARunnerCharacter, FRunnerDeath)
 
-class UCharacterCamera;
+class AEndlessRunnerGameState;
 
 UCLASS()
 class FG_ENDLESSRUNNER_API ARunnerCharacter : public ACharacter
 {
 	GENERATED_BODY()
+
+	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, meta = (AllowPrivateAccess = "true"))
+	TObjectPtr<UCapsuleComponent> StoredLocationCollision;
 
 public:
 	ARunnerCharacter();
@@ -24,6 +26,9 @@ public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Runner Settings")
 	float InvincibleTime = .5f;
+
+	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Runner Settings")
+	float StoredLocationDelay = .1f;
 
 	UPROPERTY(EditAnywhere, BlueprintReadWrite, Category="Runner Settings")
 	int MaxHitPoints = 3;
@@ -92,6 +97,12 @@ protected:
 	float TargetLaneY;
 	UPROPERTY(Transient)
 	float CurrentMoveSpeed;
+	
+	UPROPERTY(Transient)
+	float StoredLocationTimer;
+
+	UFUNCTION()
+	void OnStoredLocationOverlap(UPrimitiveComponent* OverlappedComp, AActor* OtherActor, UPrimitiveComponent* OtherComp, int32 OtherBodyIndex, bool bFromSweep, const FHitResult& SweepResult);
 
 public:	
 	virtual void Tick(float DeltaTime) override;
